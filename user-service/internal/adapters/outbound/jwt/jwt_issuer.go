@@ -1,0 +1,85 @@
+package jwt
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/suprt/trading/user-service/internal/core/domain"
+	er "github.com/suprt/trading/user-service/internal/core/errors"
+)
+
+type Config struct {
+	Secret []byte
+	TTL    time.Duration
+}
+type Issuer struct {
+	secret []byte
+	ttl    time.Duration
+}
+
+func NewJWTIssuer(cfg Config) *Issuer {
+	return &Issuer{secret: cfg.Secret, ttl: cfg.TTL}
+}
+
+func (j *Issuer) IssueAccess(userID domain.UserID, roles []domain.Role) (domain.AccessToken, error) {
+	roleStrings := make([]string, len(roles))
+	for i, role := range roles {
+		roleStrings[i] = string(role)
+	}
+	claims := jwt.MapClaims{
+		"sub":   string(userID),
+		"roles": roleStrings,
+		"exp":   time.Now().Add(j.ttl).Unix(),
+	}
+	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(j.secret)
+	if err != nil {
+		return "", err
+	}
+	return domain.AccessToken(signed), nil
+}
+
+func (j *Issuer) NewRefresh() (domain.RefreshToken, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return domain.RefreshToken(base64.URLEncoding.EncodeToString(b)), nil
+}
+
+func (j *Issuer) ParseAccess(token domain.AccessToken) (domain.UserID, []domain.Role, error) {
+	parsed, err := jwt.Parse(token.String(), func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return j.secret, nil
+	})
+	if err != nil {
+		return "", nil, er.ErrInvalidToken
+	}
+	if !parsed.Valid {
+		return "", nil, er.ErrInvalidToken
+	}
+
+	claims, ok := parsed.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", nil, er.ErrInvalidToken
+	}
+
+	sub, _ := claims["sub"].(string)
+	if sub == "" {
+		return "", nil, er.ErrInvalidToken
+	}
+
+	var roles []domain.Role
+	if raw, ok := claims["roles"].([]any); ok {
+		for _, r := range raw {
+			if s, ok := r.(string); ok {
+				roles = append(roles, domain.Role(s))
+			}
+		}
+	}
+	return domain.UserID(sub), roles, nil
+}

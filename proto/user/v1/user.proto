@@ -4,6 +4,7 @@ package user.v1;
 
 option go_package="github.com/suprt/trading/pkg/proto/user/v1;user_v1";
 import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
 
 
 enum Role {
@@ -19,7 +20,8 @@ service UserService {
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
-  rpc GrantRole(GrantRoleRequest) returns (GrantRoleResponse);
+  rpc AddRole(AddRoleRequest) returns (AddRoleResponse);
+  rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse);
 }
 
 message User {
@@ -27,11 +29,17 @@ message User {
   string email = 2;
   repeated Role roles = 3;
   google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
 }
 
 message RegisterRequest{
-  string email = 1;
-  string password = 2;
+  string email = 1 [
+    (buf.validate.field).string.email = true,
+    (buf.validate.field).string.min_len = 1
+  ];
+  string password = 2 [
+    (buf.validate.field).string.min_len = 8
+  ];
 }
 
 message RegisterResponse{
@@ -41,8 +49,8 @@ message RegisterResponse{
 }
 
 message LoginRequest{
-  string email = 1;
-  string password = 2;
+  string email = 1 [(buf.validate.field).string.email = true];
+  string password = 2 [(buf.validate.field).string.min_len=1];
 }
 
 message LoginResponse{
@@ -75,11 +83,19 @@ message LogoutRequest{
 message LogoutResponse{
 }
 
-message GrantRoleRequest{
+message AddRoleRequest{
   string user_id = 1;
   Role role = 2;
 }
 
-message GrantRoleResponse{
+message AddRoleResponse{
+
+}
+
+message RemoveRoleRequest{
+  string user_id = 1;
+  Role role =2;
+}
+message RemoveRoleResponse{
 
 }
