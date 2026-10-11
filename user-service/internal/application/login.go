@@ -58,7 +58,6 @@ func (l *LoginUseCase) Login(ctx context.Context, in dto.LoginInput) (*dto.Login
 		}
 		return nil, err
 	}
-
 	if err := l.hasher.Compare(creds.PasswordHash, in.Password); err != nil {
 		return nil, er.ErrInvalidCredentials
 	}

@@ -20,8 +20,8 @@ func New(userService inbound.UserService) *Handler {
 
 func (h *Handler) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
 	out, err := h.userService.Register(ctx, dto.RegisterInput{
-		Email:    req.Email,
-		Password: req.Password,
+		Email:    req.GetEmail(),
+		Password: req.GetPassword(),
 	})
 	if err != nil {
 		return nil, mapErr(err)
@@ -35,8 +35,8 @@ func (h *Handler) Register(ctx context.Context, req *userv1.RegisterRequest) (*u
 
 func (h *Handler) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.LoginResponse, error) {
 	out, err := h.userService.Login(ctx, dto.LoginInput{
-		Email:    req.Email,
-		Password: req.Password,
+		Email:    req.GetEmail(),
+		Password: req.GetPassword(),
 	})
 	if err != nil {
 		return nil, mapErr(err)
@@ -50,7 +50,7 @@ func (h *Handler) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.
 
 func (h *Handler) RefreshToken(ctx context.Context, req *userv1.RefreshTokenRequest) (*userv1.RefreshTokenResponse, error) {
 	out, err := h.userService.RefreshToken(ctx, dto.RefreshTokenInput{
-		RefreshToken: domain.RefreshToken(req.RefreshToken),
+		RefreshToken: domain.RefreshToken(req.GetRefreshToken()),
 	})
 	if err != nil {
 		return nil, mapErr(err)
@@ -63,7 +63,7 @@ func (h *Handler) RefreshToken(ctx context.Context, req *userv1.RefreshTokenRequ
 
 func (h *Handler) Logout(ctx context.Context, req *userv1.LogoutRequest) (*userv1.LogoutResponse, error) {
 	err := h.userService.Logout(ctx, dto.LogoutInput{
-		RefreshToken: domain.RefreshToken(req.RefreshToken),
+		RefreshToken: domain.RefreshToken(req.GetRefreshToken()),
 	})
 	if err != nil {
 		return nil, mapErr(err)
@@ -77,6 +77,18 @@ func (h *Handler) GetSelfProfile(ctx context.Context, _ *userv1.GetSelfProfileRe
 		return nil, mapErr(err)
 	}
 	return &userv1.GetSelfProfileResponse{
+		User: userToProto(out.User),
+	}, nil
+}
+
+func (h *Handler) GetUserByID(ctx context.Context, request *userv1.GetUserByIDRequest) (*userv1.GetUserByIDResponse, error) {
+	out, err := h.userService.GetUserByID(ctx, dto.GetUserByIDInput{
+		UserID: domain.UserID(request.GetUserId()),
+	})
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.GetUserByIDResponse{
 		User: userToProto(out.User),
 	}, nil
 }

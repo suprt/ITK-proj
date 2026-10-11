@@ -6,6 +6,7 @@ type Service struct {
 	*RefreshTokenUseCase
 	*LogoutUseCase
 	*GetSelfProfileUseCase
+	*GetUserByIDUseCase
 }
 
 func NewService(
@@ -14,6 +15,7 @@ func NewService(
 	refreshToken *RefreshTokenUseCase,
 	logout *LogoutUseCase,
 	getSelfProfile *GetSelfProfileUseCase,
+	getUserByID *GetUserByIDUseCase,
 ) *Service {
 	return &Service{
 		RegisterUseCase:       register,
@@ -21,5 +23,6 @@ func NewService(
 		RefreshTokenUseCase:   refreshToken,
 		LogoutUseCase:         logout,
 		GetSelfProfileUseCase: getSelfProfile,
+		GetUserByIDUseCase:    getUserByID,
 	}
 }

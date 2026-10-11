@@ -74,7 +74,6 @@ var Module = fx.Module("user",
 		fx.Annotate(jwt.NewJWTIssuer, fx.As(new(outbound.TokenIssuer))),
 	),
 
-
 	//---- use cases ----
 	fx.Provide(
 		application.NewRegisterUseCase,
@@ -82,6 +81,7 @@ var Module = fx.Module("user",
 		application.NewRefreshTokenUseCase,
 		application.NewLogoutUseCase,
 		application.NewGetSelfProfileUseCase,
+		application.NewGetUserByIDUseCase,
 		application.NewService,
 	),
 
@@ -92,8 +92,10 @@ var Module = fx.Module("user",
 	),
 
 	fx.Provide(grpchand.New),
-
 	fx.Invoke(registerGRPCHandlers),
+
+	fx.Provide(application.NewSeed),
+	fx.Invoke(RunSeeder),
 )
 
 func registerGRPCHandlers(srv *grpc.Server, h *grpchand.Handler) {
