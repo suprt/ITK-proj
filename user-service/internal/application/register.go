@@ -25,7 +25,7 @@ type RegisterUseCase struct {
 	refreshTTL  time.Duration
 }
 
-func NewRegister(
+func NewRegisterUseCase(
 	users outbound.UserRepository,
 	credentials outbound.CredentialsRepository,
 	sessions outbound.SessionRepository,

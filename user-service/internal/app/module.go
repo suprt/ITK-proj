@@ -47,11 +47,20 @@ var Module = fx.Module("user",
 		func(cfg userconfig.Config) grpcServer.Addr {
 			return grpcServer.Addr(cfg.GRPC.Addr)
 		},
+		func(cfg userconfig.Config) application.RefreshTokenConfig {
+			return application.RefreshTokenConfig{
+				RefreshTTL: cfg.JWT.RefreshTTL,
+			}
+		},
 	),
 
 	fx.Provide(
 		fx.Annotate(
 			interceptors.UnaryValidation,
+			fx.ResultTags(`group:"grpc_server_interceptor"`),
+		),
+		fx.Annotate(
+			interceptors.UnaryAuth,
 			fx.ResultTags(`group:"grpc_server_interceptor"`),
 		),
 	),
@@ -65,9 +74,14 @@ var Module = fx.Module("user",
 		fx.Annotate(jwt.NewJWTIssuer, fx.As(new(outbound.TokenIssuer))),
 	),
 
+
+	//---- use cases ----
 	fx.Provide(
-		application.NewRegister,
-		application.NewLogin,
+		application.NewRegisterUseCase,
+		application.NewLoginUseCase,
+		application.NewRefreshTokenUseCase,
+		application.NewLogoutUseCase,
+		application.NewGetSelfProfileUseCase,
 		application.NewService,
 	),
 

@@ -11,4 +11,5 @@ var (
 	ErrWeakPassword       = errors.New("weak password")
 	ErrForbidden          = errors.New("forbidden")
 	ErrDuplicateID        = errors.New("duplicate ID")
+	ErrUnauthenticated    = errors.New("unauthenticated")
 )

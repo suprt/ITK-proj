@@ -2,9 +2,15 @@ syntax = "proto3";
 
 package user.v1;
 
-option go_package="github.com/suprt/trading/pkg/proto/user/v1;user_v1";
-import "google/protobuf/timestamp.proto";
 import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/suprt/trading/proto/user/v1;user_v1";
+
+extend google.protobuf.MethodOptions{
+  bool requires_auth = 50001;
+}
 
 
 enum Role {
@@ -15,11 +21,20 @@ enum Role {
 }
 
 service UserService {
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-  rpc Login(LoginRequest) returns (LoginResponse);
-  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
-  rpc GetUser(GetUserRequest) returns (GetUserResponse);
-  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse){
+    option (requires_auth) = false;
+  };
+  rpc Login(LoginRequest) returns (LoginResponse){
+    option (requires_auth) = false;
+  };
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse){
+    option (requires_auth) = false;
+  };
+  rpc GetSelfProfile(GetSelfProfileRequest) returns (GetSelfProfileResponse);
+  rpc GetUserByID(GetUserByIDRequest) returns (GetUserByIDResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse){
+    option (requires_auth) = false;
+  };
   rpc AddRole(AddRoleRequest) returns (AddRoleResponse);
   rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse);
 }
@@ -32,70 +47,70 @@ message User {
   google.protobuf.Timestamp updated_at = 5;
 }
 
-message RegisterRequest{
+message RegisterRequest {
   string email = 1 [
     (buf.validate.field).string.email = true,
     (buf.validate.field).string.min_len = 1
   ];
-  string password = 2 [
-    (buf.validate.field).string.min_len = 8
-  ];
+  string password = 2 [(buf.validate.field).string.min_len = 8];
 }
 
-message RegisterResponse{
+message RegisterResponse {
   string user_id = 1;
   string access_token = 2;
   string refresh_token = 3;
 }
 
-message LoginRequest{
+message LoginRequest {
   string email = 1 [(buf.validate.field).string.email = true];
-  string password = 2 [(buf.validate.field).string.min_len=1];
+  string password = 2 [(buf.validate.field).string.min_len = 1];
 }
 
-message LoginResponse{
+message LoginResponse {
   string user_id = 1;
   string access_token = 2;
   string refresh_token = 3;
 }
 
-message RefreshTokenRequest{
-  string refresh_token = 1;
+message RefreshTokenRequest {
+  string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
 }
 
-message RefreshTokenResponse{
+message RefreshTokenResponse {
   string access_token = 1;
   string refresh_token = 2;
 }
 
-message GetUserRequest{
-  string user_id = 1;
-}
+//публичный метод, user_id из токена
+message GetSelfProfileRequest {}
 
-message GetUserResponse{
+message GetSelfProfileResponse {
   User user = 1;
 }
 
-message LogoutRequest{
-  string refresh_token = 1;
+message GetUserByIDRequest {
+  string user_id = 1 [(buf.validate.field).string.min_len = 1];
 }
 
-message LogoutResponse{
+message GetUserByIDResponse {
+  User user = 1;
 }
 
-message AddRoleRequest{
-  string user_id = 1;
-  Role role = 2;
+message LogoutRequest {
+  string refresh_token = 1 [(buf.validate.field).string.min_len = 1];
 }
 
-message AddRoleResponse{
+message LogoutResponse {}
 
+message AddRoleRequest {
+  string user_id = 1 [(buf.validate.field).string.min_len = 1];
+  Role role = 2 [(buf.validate.field).enum.defined_only = true];
 }
 
-message RemoveRoleRequest{
-  string user_id = 1;
-  Role role =2;
-}
-message RemoveRoleResponse{
+message AddRoleResponse {}
 
+message RemoveRoleRequest {
+  string user_id = 1 [(buf.validate.field).string.min_len = 1];
+  Role role = 2 [(buf.validate.field).enum.defined_only = true];
 }
+message RemoveRoleResponse {}

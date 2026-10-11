@@ -19,12 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Register_FullMethodName     = "/user.v1.UserService/Register"
-	UserService_Login_FullMethodName        = "/user.v1.UserService/Login"
-	UserService_RefreshToken_FullMethodName = "/user.v1.UserService/RefreshToken"
-	UserService_GetUser_FullMethodName      = "/user.v1.UserService/GetUser"
-	UserService_Logout_FullMethodName       = "/user.v1.UserService/Logout"
-	UserService_GrantRole_FullMethodName    = "/user.v1.UserService/GrantRole"
+	UserService_Register_FullMethodName       = "/user.v1.UserService/Register"
+	UserService_Login_FullMethodName          = "/user.v1.UserService/Login"
+	UserService_RefreshToken_FullMethodName   = "/user.v1.UserService/RefreshToken"
+	UserService_GetSelfProfile_FullMethodName = "/user.v1.UserService/GetSelfProfile"
+	UserService_GetUserByID_FullMethodName    = "/user.v1.UserService/GetUserByID"
+	UserService_Logout_FullMethodName         = "/user.v1.UserService/Logout"
+	UserService_AddRole_FullMethodName        = "/user.v1.UserService/AddRole"
+	UserService_RemoveRole_FullMethodName     = "/user.v1.UserService/RemoveRole"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -34,9 +36,11 @@ type UserServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error)
-	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	GetSelfProfile(ctx context.Context, in *GetSelfProfileRequest, opts ...grpc.CallOption) (*GetSelfProfileResponse, error)
+	GetUserByID(ctx context.Context, in *GetUserByIDRequest, opts ...grpc.CallOption) (*GetUserByIDResponse, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
-	GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*GrantRoleResponse, error)
+	AddRole(ctx context.Context, in *AddRoleRequest, opts ...grpc.CallOption) (*AddRoleResponse, error)
+	RemoveRole(ctx context.Context, in *RemoveRoleRequest, opts ...grpc.CallOption) (*RemoveRoleResponse, error)
 }
 
 type userServiceClient struct {
@@ -77,10 +81,20 @@ func (c *userServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRe
 	return out, nil
 }
 
-func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+func (c *userServiceClient) GetSelfProfile(ctx context.Context, in *GetSelfProfileRequest, opts ...grpc.CallOption) (*GetSelfProfileResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserResponse)
-	err := c.cc.Invoke(ctx, UserService_GetUser_FullMethodName, in, out, cOpts...)
+	out := new(GetSelfProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_GetSelfProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUserByID(ctx context.Context, in *GetUserByIDRequest, opts ...grpc.CallOption) (*GetUserByIDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserByIDResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserByID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,10 +111,20 @@ func (c *userServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts 
 	return out, nil
 }
 
-func (c *userServiceClient) GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*GrantRoleResponse, error) {
+func (c *userServiceClient) AddRole(ctx context.Context, in *AddRoleRequest, opts ...grpc.CallOption) (*AddRoleResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GrantRoleResponse)
-	err := c.cc.Invoke(ctx, UserService_GrantRole_FullMethodName, in, out, cOpts...)
+	out := new(AddRoleResponse)
+	err := c.cc.Invoke(ctx, UserService_AddRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) RemoveRole(ctx context.Context, in *RemoveRoleRequest, opts ...grpc.CallOption) (*RemoveRoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RemoveRoleResponse)
+	err := c.cc.Invoke(ctx, UserService_RemoveRole_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -114,9 +138,11 @@ type UserServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error)
-	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
+	GetSelfProfile(context.Context, *GetSelfProfileRequest) (*GetSelfProfileResponse, error)
+	GetUserByID(context.Context, *GetUserByIDRequest) (*GetUserByIDResponse, error)
 	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
-	GrantRole(context.Context, *GrantRoleRequest) (*GrantRoleResponse, error)
+	AddRole(context.Context, *AddRoleRequest) (*AddRoleResponse, error)
+	RemoveRole(context.Context, *RemoveRoleRequest) (*RemoveRoleResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -136,14 +162,20 @@ func (UnimplementedUserServiceServer) Login(context.Context, *LoginRequest) (*Lo
 func (UnimplementedUserServiceServer) RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RefreshToken not implemented")
 }
-func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetUser not implemented")
+func (UnimplementedUserServiceServer) GetSelfProfile(context.Context, *GetSelfProfileRequest) (*GetSelfProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSelfProfile not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserByID(context.Context, *GetUserByIDRequest) (*GetUserByIDResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUserByID not implemented")
 }
 func (UnimplementedUserServiceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Logout not implemented")
 }
-func (UnimplementedUserServiceServer) GrantRole(context.Context, *GrantRoleRequest) (*GrantRoleResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GrantRole not implemented")
+func (UnimplementedUserServiceServer) AddRole(context.Context, *AddRoleRequest) (*AddRoleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AddRole not implemented")
+}
+func (UnimplementedUserServiceServer) RemoveRole(context.Context, *RemoveRoleRequest) (*RemoveRoleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RemoveRole not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -220,20 +252,38 @@ func _UserService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserRequest)
+func _UserService_GetSelfProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSelfProfileRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetUser(ctx, in)
+		return srv.(UserServiceServer).GetSelfProfile(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_GetUser_FullMethodName,
+		FullMethod: UserService_GetSelfProfile_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUser(ctx, req.(*GetUserRequest))
+		return srv.(UserServiceServer).GetSelfProfile(ctx, req.(*GetSelfProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetUserByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserByID(ctx, req.(*GetUserByIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -256,20 +306,38 @@ func _UserService_Logout_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GrantRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GrantRoleRequest)
+func _UserService_AddRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRoleRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GrantRole(ctx, in)
+		return srv.(UserServiceServer).AddRole(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_GrantRole_FullMethodName,
+		FullMethod: UserService_AddRole_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GrantRole(ctx, req.(*GrantRoleRequest))
+		return srv.(UserServiceServer).AddRole(ctx, req.(*AddRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_RemoveRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).RemoveRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_RemoveRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).RemoveRole(ctx, req.(*RemoveRoleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -294,16 +362,24 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_RefreshToken_Handler,
 		},
 		{
-			MethodName: "GetUser",
-			Handler:    _UserService_GetUser_Handler,
+			MethodName: "GetSelfProfile",
+			Handler:    _UserService_GetSelfProfile_Handler,
+		},
+		{
+			MethodName: "GetUserByID",
+			Handler:    _UserService_GetUserByID_Handler,
 		},
 		{
 			MethodName: "Logout",
 			Handler:    _UserService_Logout_Handler,
 		},
 		{
-			MethodName: "GrantRole",
-			Handler:    _UserService_GrantRole_Handler,
+			MethodName: "AddRole",
+			Handler:    _UserService_AddRole_Handler,
+		},
+		{
+			MethodName: "RemoveRole",
+			Handler:    _UserService_RemoveRole_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

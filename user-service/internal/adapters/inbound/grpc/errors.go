@@ -15,10 +15,13 @@ func mapErr(err error) error {
 	case errors.Is(err, er.ErrWeakPassword):
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, er.ErrUserNotFound):
-		return status.Error(codes.Unauthenticated, err.Error())
+		return status.Error(codes.NotFound, err.Error())
 	case errors.Is(err, er.ErrForbidden):
 		return status.Error(codes.PermissionDenied, err.Error())
-	case errors.Is(err, er.ErrInvalidCredentials):
+	case errors.Is(err, er.ErrInvalidToken),
+		errors.Is(err, er.ErrExpiredToken),
+		errors.Is(err, er.ErrInvalidCredentials),
+		errors.Is(err, er.ErrUnauthenticated):
 		return status.Error(codes.Unauthenticated, err.Error())
 	default:
 		return status.Error(codes.Internal, "internal error")

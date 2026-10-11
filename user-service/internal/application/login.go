@@ -24,7 +24,7 @@ type LoginUseCase struct {
 	refreshTTL time.Duration
 }
 
-func NewLogin(
+func NewLoginUseCase(
 	users outbound.UserRepository,
 	cred outbound.CredentialsRepository,
 	sessions outbound.SessionRepository,

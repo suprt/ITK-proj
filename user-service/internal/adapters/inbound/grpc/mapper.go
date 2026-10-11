@@ -29,5 +29,6 @@ func userToProto(u *domain.User) *userv1.User {
 		Email:     u.Email,
 		Roles:     roles,
 		CreatedAt: timestamppb.New(u.CreatedAt),
+		UpdatedAt: timestamppb.New(u.UpdatedAt),
 	}
 }
