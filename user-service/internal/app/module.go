@@ -82,6 +82,8 @@ var Module = fx.Module("user",
 		application.NewLogoutUseCase,
 		application.NewGetSelfProfileUseCase,
 		application.NewGetUserByIDUseCase,
+		application.NewAddRoleUseCase,
+		application.NewRemoveRoleUseCase,
 		application.NewService,
 	),
 

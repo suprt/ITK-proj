@@ -24,7 +24,7 @@ func NewJWTIssuer(cfg Config) *Issuer {
 	return &Issuer{secret: cfg.Secret, ttl: cfg.TTL}
 }
 
-func (j *Issuer) IssueAccess(userID domain.UserID, roles []domain.Role) (domain.AccessToken, error) {
+func (j *Issuer) IssueAccess(userID domain.UserID, roles []domain.Role, rolesVersion int64) (domain.AccessToken, error) {
 	roleStrings := make([]string, len(roles))
 	for i, role := range roles {
 		roleStrings[i] = string(role)
@@ -32,6 +32,7 @@ func (j *Issuer) IssueAccess(userID domain.UserID, roles []domain.Role) (domain.
 	claims := jwt.MapClaims{
 		"sub":   string(userID),
 		"roles": roleStrings,
+		"rv":    rolesVersion,
 		"exp":   time.Now().Add(j.ttl).Unix(),
 	}
 	signed, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(j.secret)
@@ -49,7 +50,7 @@ func (j *Issuer) NewRefresh() (domain.RefreshToken, error) {
 	return domain.RefreshToken(base64.URLEncoding.EncodeToString(b)), nil
 }
 
-func (j *Issuer) ParseAccess(token domain.AccessToken) (domain.UserID, []domain.Role, error) {
+func (j *Issuer) ParseAccess(token domain.AccessToken) (domain.UserID, []domain.Role, int64, error) {
 	parsed, err := jwt.Parse(token.String(), func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
@@ -57,20 +58,25 @@ func (j *Issuer) ParseAccess(token domain.AccessToken) (domain.UserID, []domain.
 		return j.secret, nil
 	})
 	if err != nil {
-		return "", nil, er.ErrInvalidToken
+		return "", nil, 0, er.ErrInvalidToken
 	}
 	if !parsed.Valid {
-		return "", nil, er.ErrInvalidToken
+		return "", nil, 0, er.ErrInvalidToken
 	}
 
 	claims, ok := parsed.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", nil, er.ErrInvalidToken
+		return "", nil, 0, er.ErrInvalidToken
 	}
 
 	sub, _ := claims["sub"].(string)
 	if sub == "" {
-		return "", nil, er.ErrInvalidToken
+		return "", nil, 0, er.ErrInvalidToken
+	}
+
+	var rv int64
+	if v, ok := claims["rv"].(int64); ok {
+		rv = v
 	}
 
 	var roles []domain.Role
@@ -81,5 +87,6 @@ func (j *Issuer) ParseAccess(token domain.AccessToken) (domain.UserID, []domain.
 			}
 		}
 	}
-	return domain.UserID(sub), roles, nil
+
+	return domain.UserID(sub), roles, rv, nil
 }

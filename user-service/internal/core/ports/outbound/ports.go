@@ -22,6 +22,7 @@ type SessionRepository interface {
 	Save(ctx context.Context, s *domain.RefreshSession) error
 	GetByToken(ctx context.Context, token domain.RefreshToken) (*domain.RefreshSession, error)
 	Delete(ctx context.Context, t domain.RefreshToken) error
+	DeleteByUserID(ctx context.Context, userID domain.UserID) error
 }
 
 type PasswordHasher interface {
@@ -30,9 +31,9 @@ type PasswordHasher interface {
 }
 
 type TokenIssuer interface {
-	IssueAccess(userID domain.UserID, roles []domain.Role) (domain.AccessToken, error)
+	IssueAccess(userID domain.UserID, roles []domain.Role, rolesVersion int64) (domain.AccessToken, error)
 	NewRefresh() (domain.RefreshToken, error)
-	ParseAccess(token domain.AccessToken) (domain.UserID, []domain.Role, error)
+	ParseAccess(token domain.AccessToken) (domain.UserID, []domain.Role, int64, error)
 }
 
 type IDGenerator interface {

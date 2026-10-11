@@ -62,7 +62,7 @@ func (l *LoginUseCase) Login(ctx context.Context, in dto.LoginInput) (*dto.Login
 		return nil, er.ErrInvalidCredentials
 	}
 
-	access, err := l.tokens.IssueAccess(user.ID, user.Roles)
+	access, err := l.tokens.IssueAccess(user.ID, user.Roles, user.RolesVersion)
 	if err != nil {
 		return nil, err
 	}

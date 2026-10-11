@@ -15,11 +15,12 @@ const (
 )
 
 type User struct {
-	ID        UserID
-	Email     string
-	Roles     []Role
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID           UserID
+	Email        string
+	Roles        []Role
+	RolesVersion int64
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 func (u *User) HasRole(role Role) bool {

@@ -53,11 +53,12 @@ func (s *Seed) SeedUser(ctx context.Context, in SeedUserInput) error {
 
 	now := time.Now()
 	user := &domain.User{
-		ID:        domain.UserID(s.ids.New()),
-		Email:     in.Email,
-		Roles:     in.Roles,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:           domain.UserID(s.ids.New()),
+		Email:        in.Email,
+		Roles:        in.Roles,
+		RolesVersion: 1,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
 	if err := s.user.Create(ctx, user); err != nil {

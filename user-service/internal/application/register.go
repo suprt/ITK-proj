@@ -61,11 +61,12 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 	}
 	now := time.Now()
 	user := &domain.User{
-		ID:        domain.UserID(r.ids.New()),
-		Email:     in.Email,
-		Roles:     []domain.Role{domain.RoleUser}, //всегда создаётся с User, другие роли могут быть выданы через GrantRole
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:           domain.UserID(r.ids.New()),
+		Email:        in.Email,
+		Roles:        []domain.Role{domain.RoleUser}, //всегда создаётся с User, другие роли могут быть выданы через GrantRole
+		RolesVersion: 1,
+		CreatedAt:    now,
+		UpdatedAt:    now,
 	}
 
 	// UUIDv4 коллизия крайне маловероятна, но не невозможна
@@ -78,7 +79,7 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 		return nil, err
 	}
 
-	access, err := r.tokens.IssueAccess(user.ID, user.Roles)
+	access, err := r.tokens.IssueAccess(user.ID, user.Roles, user.RolesVersion)
 	if err != nil {
 		return nil, err
 	}

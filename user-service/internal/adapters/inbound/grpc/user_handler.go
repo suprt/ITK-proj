@@ -81,9 +81,9 @@ func (h *Handler) GetSelfProfile(ctx context.Context, _ *userv1.GetSelfProfileRe
 	}, nil
 }
 
-func (h *Handler) GetUserByID(ctx context.Context, request *userv1.GetUserByIDRequest) (*userv1.GetUserByIDResponse, error) {
+func (h *Handler) GetUserByID(ctx context.Context, req *userv1.GetUserByIDRequest) (*userv1.GetUserByIDResponse, error) {
 	out, err := h.userService.GetUserByID(ctx, dto.GetUserByIDInput{
-		UserID: domain.UserID(request.GetUserId()),
+		UserID: domain.UserID(req.GetUserId()),
 	})
 	if err != nil {
 		return nil, mapErr(err)
@@ -91,4 +91,32 @@ func (h *Handler) GetUserByID(ctx context.Context, request *userv1.GetUserByIDRe
 	return &userv1.GetUserByIDResponse{
 		User: userToProto(out.User),
 	}, nil
+}
+
+func (h *Handler) AddRole(ctx context.Context, req *userv1.AddRoleRequest) (*userv1.AddRoleResponse, error) {
+	role, err := roleFromProto(req.GetRole())
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	if err := h.userService.AddRole(ctx, dto.AddRoleInput{
+		UserID: domain.UserID(req.GetUserId()),
+		Role:   role,
+	}); err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.AddRoleResponse{}, nil
+}
+
+func (h *Handler) RemoveRole(ctx context.Context, req *userv1.RemoveRoleRequest) (*userv1.RemoveRoleResponse, error) {
+	role, err := roleFromProto(req.GetRole())
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	if err := h.userService.RemoveRole(ctx, dto.RemoveRoleInput{
+		UserID: domain.UserID(req.GetUserId()),
+		Role:   role,
+	}); err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.RemoveRoleResponse{}, nil
 }

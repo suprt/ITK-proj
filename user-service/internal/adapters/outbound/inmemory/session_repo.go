@@ -40,3 +40,14 @@ func (r *SessionRepo) Delete(_ context.Context, t domain.RefreshToken) error {
 	delete(r.data, t)
 	return nil
 }
+
+func (r *SessionRepo) DeleteByUserID(_ context.Context, userID domain.UserID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for token, s := range r.data {
+		if s.UserID == userID {
+			delete(r.data, token)
+		}
+	}
+	return nil
+}

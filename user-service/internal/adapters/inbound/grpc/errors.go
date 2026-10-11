@@ -23,6 +23,8 @@ func mapErr(err error) error {
 		errors.Is(err, er.ErrInvalidCredentials),
 		errors.Is(err, er.ErrUnauthenticated):
 		return status.Error(codes.Unauthenticated, err.Error())
+	case errors.Is(err, er.ErrInvalidRole):
+		return status.Error(codes.InvalidArgument, err.Error())
 	default:
 		return status.Error(codes.Internal, "internal error")
 	}

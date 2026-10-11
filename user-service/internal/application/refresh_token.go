@@ -72,7 +72,7 @@ func (r *RefreshTokenUseCase) RefreshToken(ctx context.Context, in dto.RefreshTo
 		return nil, err
 	}
 
-	access, err := r.tokens.IssueAccess(user.ID, user.Roles)
+	access, err := r.tokens.IssueAccess(user.ID, user.Roles, user.RolesVersion)
 	if err != nil {
 		return nil, err
 	}
