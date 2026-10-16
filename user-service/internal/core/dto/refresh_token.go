@@ -7,6 +7,7 @@ type RefreshTokenInput struct {
 }
 
 type RefreshTokenOutput struct {
-	AccessToken  domain.AccessToken
-	RefreshToken domain.RefreshToken
+	AccessToken    domain.AccessToken
+	RefreshToken   domain.RefreshToken
+	AccessExpireIn int64
 }

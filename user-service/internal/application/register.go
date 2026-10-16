@@ -11,37 +11,24 @@ import (
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
 )
 
-type RegisterConfig struct {
-	RefreshTTL time.Duration
-}
-
 type RegisterUseCase struct {
 	users       outbound.UserRepository
 	credentials outbound.CredentialsRepository
-	sessions    outbound.SessionRepository
 	hasher      outbound.PasswordHasher
-	tokens      outbound.TokenIssuer
 	ids         outbound.IDGenerator
-	refreshTTL  time.Duration
 }
 
 func NewRegisterUseCase(
 	users outbound.UserRepository,
 	credentials outbound.CredentialsRepository,
-	sessions outbound.SessionRepository,
 	hasher outbound.PasswordHasher,
-	tokens outbound.TokenIssuer,
 	ids outbound.IDGenerator,
-	cfg RegisterConfig,
 ) *RegisterUseCase {
 	return &RegisterUseCase{
 		users:       users,
 		credentials: credentials,
-		sessions:    sessions,
 		hasher:      hasher,
-		tokens:      tokens,
 		ids:         ids,
-		refreshTTL:  cfg.RefreshTTL,
 	}
 }
 
@@ -69,8 +56,7 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 		UpdatedAt:    now,
 	}
 
-	// UUIDv4 коллизия крайне маловероятна, но не невозможна
-	if err := r.createUserWithRetry(ctx, user); err != nil {
+	if err := r.users.Create(ctx, user); err != nil {
 		return nil, err
 	}
 
@@ -79,45 +65,7 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 		return nil, err
 	}
 
-	access, err := r.tokens.IssueAccess(user.ID, user.Roles, user.RolesVersion)
-	if err != nil {
-		return nil, err
-	}
-	refresh, err := r.tokens.NewRefresh()
-	if err != nil {
-		return nil, err
-	}
-
-	session := &domain.RefreshSession{
-		Token:     refresh,
-		UserID:    user.ID,
-		ExpiresAt: time.Now().Add(r.refreshTTL),
-	}
-
-	if err := r.sessions.Save(ctx, session); err != nil {
-		return nil, err
-	}
-
 	return &dto.RegisterOutput{
-		UserID:       user.ID,
-		AccessToken:  access,
-		RefreshToken: refresh,
+		UserID: user.ID,
 	}, nil
-}
-
-const maxIDAttempts = 3
-
-func (r *RegisterUseCase) createUserWithRetry(ctx context.Context, u *domain.User) error {
-	var err error
-	for range maxIDAttempts {
-		u.ID = domain.UserID(r.ids.New())
-		err = r.users.Create(ctx, u)
-		if err == nil {
-			return nil
-		}
-		if !errors.Is(err, er.ErrDuplicateID) {
-			return err
-		}
-	}
-	return err
 }

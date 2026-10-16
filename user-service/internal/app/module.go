@@ -1,6 +1,10 @@
 package app
 
 import (
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
 	userv1 "github.com/suprt/trading/proto/user/v1"
 	"github.com/suprt/trading/shared/bootstrap"
 	"github.com/suprt/trading/shared/grpcServer"
@@ -19,94 +23,105 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var Module = fx.Module("user",
-	fx.Provide(func() userconfig.Config {
-		return userconfig.Default()
-	}),
+func Module(cfg userconfig.Config) fx.Option {
+	return fx.Module("user",
+		fx.Provide(func() userconfig.Config {
+			return cfg
+		}),
 
-	fx.Provide(
-		func(cfg userconfig.Config) jwt.Config {
-			return jwt.Config{
-				Secret: cfg.JWT.Secret,
-				TTL:    cfg.JWT.AccessTTL,
-			}
+		fx.Provide(
+			func(cfg userconfig.Config) jwt.Config {
+				return jwt.Config{
+					Secret: []byte(cfg.Secret),
+					TTL:    cfg.JWT.AccessTTL,
+				}
 
-		},
+			},
 
-		func(cfg userconfig.Config) application.RegisterConfig {
-			return application.RegisterConfig{
-				RefreshTTL: cfg.JWT.RefreshTTL,
-			}
-		},
-		func(cfg userconfig.Config) application.LoginConfig {
-			return application.LoginConfig{
-				RefreshTTL: cfg.JWT.RefreshTTL,
-			}
-		},
+			func(cfg userconfig.Config) application.LoginConfig {
+				return application.LoginConfig{
+					RefreshTTL: cfg.JWT.RefreshTTL,
+					AccessTTL:  cfg.JWT.AccessTTL,
+				}
+			},
 
-		func(cfg userconfig.Config) grpcServer.Addr {
-			return grpcServer.Addr(cfg.GRPC.Addr)
-		},
-		func(cfg userconfig.Config) application.RefreshTokenConfig {
-			return application.RefreshTokenConfig{
-				RefreshTTL: cfg.JWT.RefreshTTL,
-			}
-		},
-	),
-
-	fx.Provide(
-		fx.Annotate(
-			interceptors.UnaryValidation,
-			fx.ResultTags(`group:"grpc_server_interceptor"`),
+			func(cfg userconfig.Config) grpcServer.Addr {
+				return grpcServer.Addr(cfg.GRPC.Addr)
+			},
+			func(cfg userconfig.Config) application.RefreshTokenConfig {
+				return application.RefreshTokenConfig{
+					RefreshTTL: cfg.JWT.RefreshTTL,
+					AccessTTL:  cfg.JWT.AccessTTL,
+				}
+			},
 		),
-		fx.Annotate(
-			interceptors.UnaryAuth,
-			fx.ResultTags(`group:"grpc_server_interceptor"`),
+
+		fx.Provide(
+			fx.Annotate(
+				interceptors.UnaryValidation,
+				fx.ResultTags(`group:"grpc_server_interceptor"`),
+			),
+			fx.Annotate(
+				func(cfg userconfig.Config, tokens outbound.TokenIssuer) grpc.UnaryServerInterceptor {
+					return interceptors.UnaryAuth(tokens, cfg.Auth.Whitelist)
+				},
+
+				fx.ResultTags(`group:"grpc_server_interceptor"`),
+			),
 		),
-	),
 
-	fx.Provide(
-		fx.Annotate(inmemory.NewUserRepo, fx.As(new(outbound.UserRepository))),
-		fx.Annotate(inmemory.NewCredentialsRepo, fx.As(new(outbound.CredentialsRepository))),
-		fx.Annotate(inmemory.NewSessionRepo, fx.As(new(outbound.SessionRepository))),
-		fx.Annotate(crypto.NewBcryptHasher, fx.As(new(outbound.PasswordHasher))),
-		fx.Annotate(idgen.NewUUIDGen, fx.As(new(outbound.IDGenerator))),
-		fx.Annotate(jwt.NewJWTIssuer, fx.As(new(outbound.TokenIssuer))),
-	),
-
-	//---- use cases ----
-	fx.Provide(
-		application.NewRegisterUseCase,
-		application.NewLoginUseCase,
-		application.NewRefreshTokenUseCase,
-		application.NewLogoutUseCase,
-		application.NewGetSelfProfileUseCase,
-		application.NewGetUserByIDUseCase,
-		application.NewAddRoleUseCase,
-		application.NewRemoveRoleUseCase,
-		application.NewService,
-	),
-
-	fx.Provide(
-		fx.Annotate(
-			func(s *application.Service) inbound.UserService { return s },
+		fx.Provide(
+			fx.Annotate(inmemory.NewUserRepo, fx.As(new(outbound.UserRepository))),
+			fx.Annotate(inmemory.NewCredentialsRepo, fx.As(new(outbound.CredentialsRepository))),
+			fx.Annotate(inmemory.NewSessionRepo, fx.As(new(outbound.SessionRepository))),
+			fx.Annotate(crypto.NewBcryptHasher, fx.As(new(outbound.PasswordHasher))),
+			fx.Annotate(idgen.NewUUIDGen, fx.As(new(outbound.IDGenerator))),
+			fx.Annotate(jwt.NewJWTIssuer, fx.As(new(outbound.TokenIssuer))),
 		),
-	),
 
-	fx.Provide(grpchand.New),
-	fx.Invoke(registerGRPCHandlers),
+		//---- use cases ----
+		fx.Provide(
+			application.NewRegisterUseCase,
+			application.NewLoginUseCase,
+			application.NewRefreshTokenUseCase,
+			application.NewLogoutUseCase,
+			application.NewGetSelfProfileUseCase,
+			application.NewGetUserByIDUseCase,
+			application.NewAddRoleUseCase,
+			application.NewRemoveRoleUseCase,
+			application.NewService,
+		),
 
-	fx.Provide(application.NewSeed),
-	fx.Invoke(RunSeeder),
-)
+		fx.Provide(
+			fx.Annotate(
+				func(s *application.Service) inbound.UserService { return s },
+			),
+		),
 
+		fx.Provide(grpchand.New),
+		fx.Invoke(registerGRPCHandlers),
+
+		fx.Provide(application.NewSeed),
+		fx.Invoke(RunSeeder),
+	)
+}
 func registerGRPCHandlers(srv *grpc.Server, h *grpchand.Handler) {
 	userv1.RegisterUserServiceServer(srv, h)
 	reflection.Register(srv)
 }
 
 func Start() {
+	_ = godotenv.Load()
+	yamlPath := os.Getenv("CONFIG_YAML_PATH")
+	if yamlPath == "" {
+		yamlPath = "config.yaml"
+	}
+	cfg, err := userconfig.Load(yamlPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 	bootstrap.NewApp(bootstrap.Options{
-		Modules: []fx.Option{Module},
+		Modules:     []fx.Option{Module(*cfg)},
+		StopTimeout: cfg.GRPC.StopTimeout,
 	}).Run()
 }

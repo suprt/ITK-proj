@@ -12,6 +12,7 @@ import (
 
 type RefreshTokenConfig struct {
 	RefreshTTL time.Duration
+	AccessTTL  time.Duration
 }
 
 type RefreshTokenUseCase struct {
@@ -19,6 +20,7 @@ type RefreshTokenUseCase struct {
 	sessions   outbound.SessionRepository
 	tokens     outbound.TokenIssuer
 	refreshTTL time.Duration
+	accessTTL  time.Duration
 }
 
 func NewRefreshTokenUseCase(
@@ -31,6 +33,7 @@ func NewRefreshTokenUseCase(
 		sessions:   sessions,
 		tokens:     tokens,
 		refreshTTL: cfg.RefreshTTL,
+		accessTTL:  cfg.AccessTTL,
 	}
 }
 
@@ -78,7 +81,8 @@ func (r *RefreshTokenUseCase) RefreshToken(ctx context.Context, in dto.RefreshTo
 	}
 
 	return &dto.RefreshTokenOutput{
-		AccessToken:  access,
-		RefreshToken: newRefresh,
+		AccessToken:    access,
+		RefreshToken:   newRefresh,
+		AccessExpireIn: int64(r.accessTTL.Seconds()),
 	}, nil
 }

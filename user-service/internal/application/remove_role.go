@@ -40,6 +40,7 @@ func (uc *RemoveRoleUseCase) RemoveRole(ctx context.Context, in dto.RemoveRoleIn
 		if errors.Is(err, er.ErrUserNotFound) {
 			return er.ErrUnauthenticated
 		}
+		return err
 	}
 
 	if !caller.HasRole(domain.RoleAdmin) {

@@ -10,7 +10,7 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
+	_ "google.golang.org/protobuf/types/descriptorpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -163,7 +163,7 @@ func (x *User) GetUpdatedAt() *timestamppb.Timestamp {
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"` //username
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -215,8 +215,6 @@ func (x *RegisterRequest) GetPassword() string {
 type RegisterResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	RefreshToken  string                 `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -254,20 +252,6 @@ func (*RegisterResponse) Descriptor() ([]byte, []int) {
 func (x *RegisterResponse) GetUserId() string {
 	if x != nil {
 		return x.UserId
-	}
-	return ""
-}
-
-func (x *RegisterResponse) GetAccessToken() string {
-	if x != nil {
-		return x.AccessToken
-	}
-	return ""
-}
-
-func (x *RegisterResponse) GetRefreshToken() string {
-	if x != nil {
-		return x.RefreshToken
 	}
 	return ""
 }
@@ -325,12 +309,13 @@ func (x *LoginRequest) GetPassword() string {
 }
 
 type LoginResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	RefreshToken  string                 `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	UserId          string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	AccessToken     string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken    string                 `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	AccessExpiresIn int64                  `protobuf:"varint,4,opt,name=access_expires_in,json=accessExpiresIn,proto3" json:"access_expires_in,omitempty"` //seconds
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *LoginResponse) Reset() {
@@ -384,6 +369,13 @@ func (x *LoginResponse) GetRefreshToken() string {
 	return ""
 }
 
+func (x *LoginResponse) GetAccessExpiresIn() int64 {
+	if x != nil {
+		return x.AccessExpiresIn
+	}
+	return 0
+}
+
 type RefreshTokenRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
@@ -429,11 +421,12 @@ func (x *RefreshTokenRequest) GetRefreshToken() string {
 }
 
 type RefreshTokenResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken     string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken    string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	AccessExpiresIn int64                  `protobuf:"varint,3,opt,name=access_expires_in,json=accessExpiresIn,proto3" json:"access_expires_in,omitempty"` //seconds
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *RefreshTokenResponse) Reset() {
@@ -478,6 +471,13 @@ func (x *RefreshTokenResponse) GetRefreshToken() string {
 		return x.RefreshToken
 	}
 	return ""
+}
+
+func (x *RefreshTokenResponse) GetAccessExpiresIn() int64 {
+	if x != nil {
+		return x.AccessExpiresIn
+	}
+	return 0
 }
 
 // публичный метод, user_id из токена
@@ -905,23 +905,6 @@ func (*RemoveRoleResponse) Descriptor() ([]byte, []int) {
 	return file_user_v1_user_proto_rawDescGZIP(), []int{16}
 }
 
-var file_user_v1_user_proto_extTypes = []protoimpl.ExtensionInfo{
-	{
-		ExtendedType:  (*descriptorpb.MethodOptions)(nil),
-		ExtensionType: (*bool)(nil),
-		Field:         50001,
-		Name:          "user.v1.requires_auth",
-		Tag:           "varint,50001,opt,name=requires_auth",
-		Filename:      "user/v1/user.proto",
-	},
-}
-
-// Extension fields to descriptorpb.MethodOptions.
-var (
-	// optional bool requires_auth = 50001;
-	E_RequiresAuth = &file_user_v1_user_proto_extTypes[0]
-)
-
 var File_user_v1_user_proto protoreflect.FileDescriptor
 
 const file_user_v1_user_proto_rawDesc = "" +
@@ -938,58 +921,59 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"W\n" +
 	"\x0fRegisterRequest\x12\x1f\n" +
 	"\x05email\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01`\x01R\x05email\x12#\n" +
-	"\bpassword\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\bR\bpassword\"s\n" +
+	"\bpassword\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\bR\bpassword\"+\n" +
 	"\x10RegisterResponse\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
-	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"R\n" +
-	"\fLoginRequest\x12\x1d\n" +
-	"\x05email\x18\x01 \x01(\tB\a\xbaH\x04r\x02`\x01R\x05email\x12#\n" +
-	"\bpassword\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\bpassword\"p\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"T\n" +
+	"\fLoginRequest\x12\x1f\n" +
+	"\x05email\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01`\x01R\x05email\x12#\n" +
+	"\bpassword\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\bR\bpassword\"\x9c\x01\n" +
 	"\rLoginResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\"C\n" +
-	"\x13RefreshTokenRequest\x12,\n" +
-	"\rrefresh_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\frefreshToken\"^\n" +
+	"\rrefresh_token\x18\x03 \x01(\tR\frefreshToken\x12*\n" +
+	"\x11access_expires_in\x18\x04 \x01(\x03R\x0faccessExpiresIn\"D\n" +
+	"\x13RefreshTokenRequest\x12-\n" +
+	"\rrefresh_token\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01+R\frefreshToken\"\x8a\x01\n" +
 	"\x14RefreshTokenResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"\x17\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12*\n" +
+	"\x11access_expires_in\x18\x03 \x01(\x03R\x0faccessExpiresIn\"\x17\n" +
 	"\x15GetSelfProfileRequest\";\n" +
 	"\x16GetSelfProfileResponse\x12!\n" +
-	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\"6\n" +
-	"\x12GetUserByIDRequest\x12 \n" +
-	"\auser_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06userId\"8\n" +
+	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\"7\n" +
+	"\x12GetUserByIDRequest\x12!\n" +
+	"\auser_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06userId\"8\n" +
 	"\x13GetUserByIDResponse\x12!\n" +
-	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\"=\n" +
-	"\rLogoutRequest\x12,\n" +
-	"\rrefresh_token\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\frefreshToken\"\x10\n" +
-	"\x0eLogoutResponse\"_\n" +
-	"\x0eAddRoleRequest\x12 \n" +
-	"\auser_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06userId\x12+\n" +
-	"\x04role\x18\x02 \x01(\x0e2\r.user.v1.RoleB\b\xbaH\x05\x82\x01\x02\x10\x01R\x04role\"\x11\n" +
-	"\x0fAddRoleResponse\"b\n" +
-	"\x11RemoveRoleRequest\x12 \n" +
-	"\auser_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x06userId\x12+\n" +
-	"\x04role\x18\x02 \x01(\x0e2\r.user.v1.RoleB\b\xbaH\x05\x82\x01\x02\x10\x01R\x04role\"\x14\n" +
+	"\x04user\x18\x01 \x01(\v2\r.user.v1.UserR\x04user\">\n" +
+	"\rLogoutRequest\x12-\n" +
+	"\rrefresh_token\x18\x01 \x01(\tB\b\xbaH\x05r\x03\x98\x01+R\frefreshToken\"\x10\n" +
+	"\x0eLogoutResponse\"b\n" +
+	"\x0eAddRoleRequest\x12!\n" +
+	"\auser_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06userId\x12-\n" +
+	"\x04role\x18\x02 \x01(\x0e2\r.user.v1.RoleB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04role\"\x11\n" +
+	"\x0fAddRoleResponse\"e\n" +
+	"\x11RemoveRoleRequest\x12!\n" +
+	"\auser_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06userId\x12-\n" +
+	"\x04role\x18\x02 \x01(\x0e2\r.user.v1.RoleB\n" +
+	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04role\"\x14\n" +
 	"\x12RemoveRoleResponse*L\n" +
 	"\x04Role\x12\x14\n" +
 	"\x10ROLE_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tROLE_USER\x10\x01\x12\x0f\n" +
 	"\vROLE_TRADER\x10\x02\x12\x0e\n" +
 	"\n" +
-	"ROLE_ADMIN\x10\x032\xc8\x04\n" +
-	"\vUserService\x12E\n" +
-	"\bRegister\x12\x18.user.v1.RegisterRequest\x1a\x19.user.v1.RegisterResponse\"\x04\x88\xb5\x18\x00\x12<\n" +
-	"\x05Login\x12\x15.user.v1.LoginRequest\x1a\x16.user.v1.LoginResponse\"\x04\x88\xb5\x18\x00\x12Q\n" +
-	"\fRefreshToken\x12\x1c.user.v1.RefreshTokenRequest\x1a\x1d.user.v1.RefreshTokenResponse\"\x04\x88\xb5\x18\x00\x12Q\n" +
+	"ROLE_ADMIN\x10\x032\xb0\x04\n" +
+	"\vUserService\x12?\n" +
+	"\bRegister\x12\x18.user.v1.RegisterRequest\x1a\x19.user.v1.RegisterResponse\x126\n" +
+	"\x05Login\x12\x15.user.v1.LoginRequest\x1a\x16.user.v1.LoginResponse\x12K\n" +
+	"\fRefreshToken\x12\x1c.user.v1.RefreshTokenRequest\x1a\x1d.user.v1.RefreshTokenResponse\x12Q\n" +
 	"\x0eGetSelfProfile\x12\x1e.user.v1.GetSelfProfileRequest\x1a\x1f.user.v1.GetSelfProfileResponse\x12H\n" +
-	"\vGetUserByID\x12\x1b.user.v1.GetUserByIDRequest\x1a\x1c.user.v1.GetUserByIDResponse\x12?\n" +
-	"\x06Logout\x12\x16.user.v1.LogoutRequest\x1a\x17.user.v1.LogoutResponse\"\x04\x88\xb5\x18\x00\x12<\n" +
+	"\vGetUserByID\x12\x1b.user.v1.GetUserByIDRequest\x1a\x1c.user.v1.GetUserByIDResponse\x129\n" +
+	"\x06Logout\x12\x16.user.v1.LogoutRequest\x1a\x17.user.v1.LogoutResponse\x12<\n" +
 	"\aAddRole\x12\x17.user.v1.AddRoleRequest\x1a\x18.user.v1.AddRoleResponse\x12E\n" +
 	"\n" +
-	"RemoveRole\x12\x1a.user.v1.RemoveRoleRequest\x1a\x1b.user.v1.RemoveRoleResponse:E\n" +
-	"\rrequires_auth\x12\x1e.google.protobuf.MethodOptions\x18ц\x03 \x01(\bR\frequiresAuthB\x84\x01\n" +
+	"RemoveRole\x12\x1a.user.v1.RemoveRoleRequest\x1a\x1b.user.v1.RemoveRoleResponseB\x84\x01\n" +
 	"\vcom.user.v1B\tUserProtoP\x01Z-github.com/suprt/trading/proto/user/v1;userv1\xa2\x02\x03UXX\xaa\x02\aUser.V1\xca\x02\aUser\\V1\xe2\x02\x13User\\V1\\GPBMetadata\xea\x02\bUser::V1b\x06proto3"
 
 var (
@@ -1007,26 +991,25 @@ func file_user_v1_user_proto_rawDescGZIP() []byte {
 var file_user_v1_user_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_user_v1_user_proto_goTypes = []any{
-	(Role)(0),                          // 0: user.v1.Role
-	(*User)(nil),                       // 1: user.v1.User
-	(*RegisterRequest)(nil),            // 2: user.v1.RegisterRequest
-	(*RegisterResponse)(nil),           // 3: user.v1.RegisterResponse
-	(*LoginRequest)(nil),               // 4: user.v1.LoginRequest
-	(*LoginResponse)(nil),              // 5: user.v1.LoginResponse
-	(*RefreshTokenRequest)(nil),        // 6: user.v1.RefreshTokenRequest
-	(*RefreshTokenResponse)(nil),       // 7: user.v1.RefreshTokenResponse
-	(*GetSelfProfileRequest)(nil),      // 8: user.v1.GetSelfProfileRequest
-	(*GetSelfProfileResponse)(nil),     // 9: user.v1.GetSelfProfileResponse
-	(*GetUserByIDRequest)(nil),         // 10: user.v1.GetUserByIDRequest
-	(*GetUserByIDResponse)(nil),        // 11: user.v1.GetUserByIDResponse
-	(*LogoutRequest)(nil),              // 12: user.v1.LogoutRequest
-	(*LogoutResponse)(nil),             // 13: user.v1.LogoutResponse
-	(*AddRoleRequest)(nil),             // 14: user.v1.AddRoleRequest
-	(*AddRoleResponse)(nil),            // 15: user.v1.AddRoleResponse
-	(*RemoveRoleRequest)(nil),          // 16: user.v1.RemoveRoleRequest
-	(*RemoveRoleResponse)(nil),         // 17: user.v1.RemoveRoleResponse
-	(*timestamppb.Timestamp)(nil),      // 18: google.protobuf.Timestamp
-	(*descriptorpb.MethodOptions)(nil), // 19: google.protobuf.MethodOptions
+	(Role)(0),                      // 0: user.v1.Role
+	(*User)(nil),                   // 1: user.v1.User
+	(*RegisterRequest)(nil),        // 2: user.v1.RegisterRequest
+	(*RegisterResponse)(nil),       // 3: user.v1.RegisterResponse
+	(*LoginRequest)(nil),           // 4: user.v1.LoginRequest
+	(*LoginResponse)(nil),          // 5: user.v1.LoginResponse
+	(*RefreshTokenRequest)(nil),    // 6: user.v1.RefreshTokenRequest
+	(*RefreshTokenResponse)(nil),   // 7: user.v1.RefreshTokenResponse
+	(*GetSelfProfileRequest)(nil),  // 8: user.v1.GetSelfProfileRequest
+	(*GetSelfProfileResponse)(nil), // 9: user.v1.GetSelfProfileResponse
+	(*GetUserByIDRequest)(nil),     // 10: user.v1.GetUserByIDRequest
+	(*GetUserByIDResponse)(nil),    // 11: user.v1.GetUserByIDResponse
+	(*LogoutRequest)(nil),          // 12: user.v1.LogoutRequest
+	(*LogoutResponse)(nil),         // 13: user.v1.LogoutResponse
+	(*AddRoleRequest)(nil),         // 14: user.v1.AddRoleRequest
+	(*AddRoleResponse)(nil),        // 15: user.v1.AddRoleResponse
+	(*RemoveRoleRequest)(nil),      // 16: user.v1.RemoveRoleRequest
+	(*RemoveRoleResponse)(nil),     // 17: user.v1.RemoveRoleResponse
+	(*timestamppb.Timestamp)(nil),  // 18: google.protobuf.Timestamp
 }
 var file_user_v1_user_proto_depIdxs = []int32{
 	0,  // 0: user.v1.User.roles:type_name -> user.v1.Role
@@ -1036,27 +1019,26 @@ var file_user_v1_user_proto_depIdxs = []int32{
 	1,  // 4: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
 	0,  // 5: user.v1.AddRoleRequest.role:type_name -> user.v1.Role
 	0,  // 6: user.v1.RemoveRoleRequest.role:type_name -> user.v1.Role
-	19, // 7: user.v1.requires_auth:extendee -> google.protobuf.MethodOptions
-	2,  // 8: user.v1.UserService.Register:input_type -> user.v1.RegisterRequest
-	4,  // 9: user.v1.UserService.Login:input_type -> user.v1.LoginRequest
-	6,  // 10: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
-	8,  // 11: user.v1.UserService.GetSelfProfile:input_type -> user.v1.GetSelfProfileRequest
-	10, // 12: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
-	12, // 13: user.v1.UserService.Logout:input_type -> user.v1.LogoutRequest
-	14, // 14: user.v1.UserService.AddRole:input_type -> user.v1.AddRoleRequest
-	16, // 15: user.v1.UserService.RemoveRole:input_type -> user.v1.RemoveRoleRequest
-	3,  // 16: user.v1.UserService.Register:output_type -> user.v1.RegisterResponse
-	5,  // 17: user.v1.UserService.Login:output_type -> user.v1.LoginResponse
-	7,  // 18: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
-	9,  // 19: user.v1.UserService.GetSelfProfile:output_type -> user.v1.GetSelfProfileResponse
-	11, // 20: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
-	13, // 21: user.v1.UserService.Logout:output_type -> user.v1.LogoutResponse
-	15, // 22: user.v1.UserService.AddRole:output_type -> user.v1.AddRoleResponse
-	17, // 23: user.v1.UserService.RemoveRole:output_type -> user.v1.RemoveRoleResponse
-	16, // [16:24] is the sub-list for method output_type
-	8,  // [8:16] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	7,  // [7:8] is the sub-list for extension extendee
+	2,  // 7: user.v1.UserService.Register:input_type -> user.v1.RegisterRequest
+	4,  // 8: user.v1.UserService.Login:input_type -> user.v1.LoginRequest
+	6,  // 9: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
+	8,  // 10: user.v1.UserService.GetSelfProfile:input_type -> user.v1.GetSelfProfileRequest
+	10, // 11: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
+	12, // 12: user.v1.UserService.Logout:input_type -> user.v1.LogoutRequest
+	14, // 13: user.v1.UserService.AddRole:input_type -> user.v1.AddRoleRequest
+	16, // 14: user.v1.UserService.RemoveRole:input_type -> user.v1.RemoveRoleRequest
+	3,  // 15: user.v1.UserService.Register:output_type -> user.v1.RegisterResponse
+	5,  // 16: user.v1.UserService.Login:output_type -> user.v1.LoginResponse
+	7,  // 17: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
+	9,  // 18: user.v1.UserService.GetSelfProfile:output_type -> user.v1.GetSelfProfileResponse
+	11, // 19: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
+	13, // 20: user.v1.UserService.Logout:output_type -> user.v1.LogoutResponse
+	15, // 21: user.v1.UserService.AddRole:output_type -> user.v1.AddRoleResponse
+	17, // 22: user.v1.UserService.RemoveRole:output_type -> user.v1.RemoveRoleResponse
+	15, // [15:23] is the sub-list for method output_type
+	7,  // [7:15] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
 	0,  // [0:7] is the sub-list for field type_name
 }
 
@@ -1072,14 +1054,13 @@ func file_user_v1_user_proto_init() {
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_v1_user_proto_rawDesc), len(file_user_v1_user_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   17,
-			NumExtensions: 1,
+			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_user_v1_user_proto_goTypes,
 		DependencyIndexes: file_user_v1_user_proto_depIdxs,
 		EnumInfos:         file_user_v1_user_proto_enumTypes,
 		MessageInfos:      file_user_v1_user_proto_msgTypes,
-		ExtensionInfos:    file_user_v1_user_proto_extTypes,
 	}.Build()
 	File_user_v1_user_proto = out.File
 	file_user_v1_user_proto_goTypes = nil

@@ -27,9 +27,7 @@ func (h *Handler) Register(ctx context.Context, req *userv1.RegisterRequest) (*u
 		return nil, mapErr(err)
 	}
 	return &userv1.RegisterResponse{
-		UserId:       string(out.UserID),
-		AccessToken:  out.AccessToken.String(),
-		RefreshToken: out.RefreshToken.String(),
+		UserId: string(out.UserID),
 	}, nil
 }
 
@@ -42,9 +40,10 @@ func (h *Handler) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.
 		return nil, mapErr(err)
 	}
 	return &userv1.LoginResponse{
-		UserId:       string(out.UserID),
-		AccessToken:  out.AccessToken.String(),
-		RefreshToken: out.RefreshToken.String(),
+		UserId:          string(out.UserID),
+		AccessToken:     out.AccessToken.String(),
+		RefreshToken:    out.RefreshToken.String(),
+		AccessExpiresIn: out.AccessExpireIn,
 	}, nil
 }
 
@@ -56,8 +55,9 @@ func (h *Handler) RefreshToken(ctx context.Context, req *userv1.RefreshTokenRequ
 		return nil, mapErr(err)
 	}
 	return &userv1.RefreshTokenResponse{
-		AccessToken:  out.AccessToken.String(),
-		RefreshToken: out.RefreshToken.String(),
+		AccessToken:     out.AccessToken.String(),
+		RefreshToken:    out.RefreshToken.String(),
+		AccessExpiresIn: out.AccessExpireIn,
 	}, nil
 }
 

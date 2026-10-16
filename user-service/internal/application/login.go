@@ -13,6 +13,7 @@ import (
 
 type LoginConfig struct {
 	RefreshTTL time.Duration
+	AccessTTL  time.Duration
 }
 
 type LoginUseCase struct {
@@ -22,6 +23,7 @@ type LoginUseCase struct {
 	hasher     outbound.PasswordHasher
 	tokens     outbound.TokenIssuer
 	refreshTTL time.Duration
+	accessTTL  time.Duration
 }
 
 func NewLoginUseCase(
@@ -39,6 +41,7 @@ func NewLoginUseCase(
 		hasher:     hasher,
 		tokens:     tokens,
 		refreshTTL: cfg.RefreshTTL,
+		accessTTL:  cfg.AccessTTL,
 	}
 }
 
@@ -81,8 +84,9 @@ func (l *LoginUseCase) Login(ctx context.Context, in dto.LoginInput) (*dto.Login
 	}
 
 	return &dto.LoginOutput{
-		UserID:       user.ID,
-		AccessToken:  access,
-		RefreshToken: refresh,
+		UserID:         user.ID,
+		AccessToken:    access,
+		RefreshToken:   refresh,
+		AccessExpireIn: int64(l.accessTTL.Seconds()),
 	}, nil
 }

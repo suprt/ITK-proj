@@ -8,7 +8,8 @@ type LoginInput struct {
 }
 
 type LoginOutput struct {
-	UserID       domain.UserID
-	AccessToken  domain.AccessToken
-	RefreshToken domain.RefreshToken
+	UserID         domain.UserID
+	AccessToken    domain.AccessToken
+	RefreshToken   domain.RefreshToken
+	AccessExpireIn int64
 }

@@ -4,16 +4,18 @@ package config
 
 import (
 	"time"
+
+	sharedconfig "github.com/suprt/trading/shared/config"
 )
 
 type GRPC struct {
-	Addr string
+	Addr        string        `env:"GRPC_ADDR" envDefault:":5005"`
+	StopTimeout time.Duration `env:"GRPC_STOP_TIMEOUT" envDefault:"15s"`
 }
 
 type JWT struct {
-	Secret     []byte
-	AccessTTL  time.Duration
-	RefreshTTL time.Duration
+	AccessTTL  time.Duration `env:"JWT_ACCESS_TTL" envDefault:"15s"`
+	RefreshTTL time.Duration `env:"JWT_REFRESH_TTL" envDefault:"168h"`
 }
 
 type SeedUser struct {
@@ -27,38 +29,18 @@ type Seed struct {
 	Users   []SeedUser
 }
 type Config struct {
+	sharedconfig.Log
+	sharedconfig.JWTSecret
 	GRPC GRPC
 	JWT  JWT
-	Seed Seed
+	Seed Seed `yaml:"seed"`
+	Auth Auth `yaml:"auth"`
 }
 
-func Default() Config {
-	return Config{
-		GRPC: GRPC{Addr: ":50051"},
-		JWT: JWT{
-			Secret:     []byte("dev-secret"),
-			AccessTTL:  15 * time.Minute,
-			RefreshTTL: 7 * 24 * time.Hour,
-		},
-		Seed: Seed{
-			Enabled: true,
-			Users: []SeedUser{
-				{
-					Email:    "admin@local",
-					Password: "admin12345",
-					Roles:    []string{"USER", "ADMIN"},
-				},
-				{
-					Email:    "trader@local",
-					Password: "trader12345",
-					Roles:    []string{"USER", "TRADER"},
-				},
-				{
-					Email:    "user@local",
-					Password: "user12345",
-					Roles:    []string{"USER"},
-				},
-			},
-		},
-	}
+type Auth struct {
+	Whitelist map[string]struct{}
+}
+
+func Load(yamlPath string) (*Config, error) {
+	return sharedconfig.Load[Config](yamlPath)
 }

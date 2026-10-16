@@ -2,6 +2,8 @@ package grpcServer
 
 import (
 	"context"
+	"errors"
+	"log"
 	"net"
 
 	"go.uber.org/fx"
@@ -11,6 +13,7 @@ import (
 type Params struct {
 	fx.In
 	LC           fx.Lifecycle
+	Shutdowner   fx.Shutdowner
 	Addr         Addr
 	Interceptors []grpc.UnaryServerInterceptor `group:"grpc_server_interceptor"`
 }
@@ -30,12 +33,35 @@ func New(p Params) Result {
 			if err != nil {
 				return err
 			}
-			go func() { _ = srv.Serve(lis) }()
+			go func() {
+				err := srv.Serve(lis)
+
+				if err != nil &&
+					!errors.Is(err, grpc.ErrServerStopped) &&
+					!errors.Is(err, net.ErrClosed) {
+					log.Printf("grpc serve failed: %v", err)
+					if shutdownErr := p.Shutdowner.Shutdown(); shutdownErr != nil {
+						log.Printf("shutdown failed: %v", shutdownErr)
+					}
+				}
+
+			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			srv.GracefulStop()
-			return nil
+			done := make(chan struct{})
+			go func() {
+				srv.GracefulStop()
+				close(done)
+			}()
+			select {
+			case <-done:
+				return nil
+			case <-ctx.Done():
+				srv.Stop()
+				return ctx.Err()
+			}
+
 		},
 	})
 

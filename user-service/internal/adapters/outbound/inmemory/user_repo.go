@@ -42,7 +42,11 @@ func (r *UserRepo) Update(_ context.Context, u *domain.User) error {
 	if !ok {
 		return er.ErrUserNotFound
 	}
+
 	if old.Email != u.Email {
+		if exiID, taken := r.byEmail[u.Email]; taken && exiID != u.ID {
+			return er.ErrEmailTaken
+		}
 		delete(r.byEmail, old.Email)
 		r.byEmail[u.Email] = u.ID
 	}

@@ -8,7 +8,5 @@ type RegisterInput struct {
 }
 
 type RegisterOutput struct {
-	UserID       domain.UserID
-	AccessToken  domain.AccessToken
-	RefreshToken domain.RefreshToken
+	UserID domain.UserID
 }

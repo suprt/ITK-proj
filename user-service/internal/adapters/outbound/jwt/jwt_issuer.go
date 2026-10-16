@@ -11,6 +11,11 @@ import (
 	er "github.com/suprt/trading/user-service/internal/core/errors"
 )
 
+// 32 байта = 256 бит энтропии.
+//  После RawURLEncoding → 43 символа base64.
+//  Если меняешь — обнови (buf.validate.field).string.len в user.proto.
+const refreshEntropyBytes = 32
+
 type Config struct {
 	Secret []byte
 	TTL    time.Duration
@@ -43,11 +48,11 @@ func (j *Issuer) IssueAccess(userID domain.UserID, roles []domain.Role, rolesVer
 }
 
 func (j *Issuer) NewRefresh() (domain.RefreshToken, error) {
-	b := make([]byte, 32)
+	b := make([]byte, refreshEntropyBytes)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
-	return domain.RefreshToken(base64.URLEncoding.EncodeToString(b)), nil
+	return domain.RefreshToken(base64.RawURLEncoding.EncodeToString(b)), nil
 }
 
 func (j *Issuer) ParseAccess(token domain.AccessToken) (domain.UserID, []domain.Role, int64, error) {

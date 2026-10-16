@@ -1,0 +1,18 @@
+auth:
+  whitelist:
+    /user.v1.UserService/Register: {}
+    /user.v1.UserService/Login: {}
+    /user.v1.UserService/RefreshToken: {}
+
+seed:
+  enabled: true
+  users:
+    - email: admin@local
+      password: admin12345
+      roles: [ USER, ADMIN ]
+    - email: trader@local
+      password: trader12345
+      roles: [ USER, TRADER ]
+    - email: user@local
+      password: user12345
+      roles: [ USER ]
