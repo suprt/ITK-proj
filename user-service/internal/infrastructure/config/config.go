@@ -9,7 +9,7 @@ import (
 )
 
 type GRPC struct {
-	Addr        string        `env:"GRPC_ADDR" envDefault:":5005"`
+	Addr        string        `env:"GRPC_ADDR" envDefault:":50051"`
 	StopTimeout time.Duration `env:"GRPC_STOP_TIMEOUT" envDefault:"15s"`
 }
 

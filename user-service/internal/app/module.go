@@ -7,7 +7,6 @@ import (
 	"github.com/joho/godotenv"
 	userv1 "github.com/suprt/trading/proto/user/v1"
 	"github.com/suprt/trading/shared/bootstrap"
-	"github.com/suprt/trading/shared/grpcServer"
 	grpchand "github.com/suprt/trading/user-service/internal/adapters/inbound/grpc"
 	"github.com/suprt/trading/user-service/internal/adapters/inbound/interceptors"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/crypto"
@@ -45,9 +44,6 @@ func Module(cfg userconfig.Config) fx.Option {
 				}
 			},
 
-			func(cfg userconfig.Config) grpcServer.Addr {
-				return grpcServer.Addr(cfg.GRPC.Addr)
-			},
 			func(cfg userconfig.Config) application.RefreshTokenConfig {
 				return application.RefreshTokenConfig{
 					RefreshTTL: cfg.JWT.RefreshTTL,
@@ -120,7 +116,9 @@ func Start() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	bootstrap.NewApp(bootstrap.Options{
+		Addr:        cfg.GRPC.Addr,
 		Modules:     []fx.Option{Module(*cfg)},
 		StopTimeout: cfg.GRPC.StopTimeout,
 	}).Run()

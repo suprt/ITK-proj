@@ -7,6 +7,7 @@ import (
 )
 
 type Options struct {
+	Addr        string
 	Modules     []fx.Option
 	StopTimeout time.Duration
-} //TODO: addr, log
+} //TODO:  log
