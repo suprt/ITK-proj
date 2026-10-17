@@ -16,6 +16,7 @@ type RegisterUseCase struct {
 	credentials outbound.CredentialsRepository
 	hasher      outbound.PasswordHasher
 	ids         outbound.IDGenerator
+	uow         outbound.UnitOfWork
 }
 
 func NewRegisterUseCase(
@@ -23,12 +24,14 @@ func NewRegisterUseCase(
 	credentials outbound.CredentialsRepository,
 	hasher outbound.PasswordHasher,
 	ids outbound.IDGenerator,
+	uow outbound.UnitOfWork,
 ) *RegisterUseCase {
 	return &RegisterUseCase{
 		users:       users,
 		credentials: credentials,
 		hasher:      hasher,
 		ids:         ids,
+		uow:         uow,
 	}
 }
 
@@ -55,13 +58,16 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
-
-	if err := r.users.Create(ctx, user); err != nil {
-		return nil, err
-	}
-
 	creds := &domain.Credentials{UserID: user.ID, PasswordHash: hash}
-	if err := r.credentials.Save(ctx, creds); err != nil {
+
+	err = r.uow.Do(ctx, func(ctx context.Context) error {
+		if err := r.users.Create(ctx, user); err != nil {
+			return err
+		}
+		return r.credentials.Save(ctx, creds)
+	})
+
+	if err != nil {
 		return nil, err
 	}
 

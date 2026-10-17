@@ -21,6 +21,7 @@ type Seed struct {
 	cred   outbound.CredentialsRepository
 	hasher outbound.PasswordHasher
 	ids    outbound.IDGenerator
+	uow    outbound.UnitOfWork
 }
 
 func NewSeed(
@@ -28,12 +29,14 @@ func NewSeed(
 	cred outbound.CredentialsRepository,
 	hasher outbound.PasswordHasher,
 	ids outbound.IDGenerator,
+	uow outbound.UnitOfWork,
 ) *Seed {
 	return &Seed{
 		user:   user,
 		cred:   cred,
 		hasher: hasher,
 		ids:    ids,
+		uow:    uow,
 	}
 }
 
@@ -60,17 +63,15 @@ func (s *Seed) SeedUser(ctx context.Context, in SeedUserInput) error {
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
-
-	if err := s.user.Create(ctx, user); err != nil {
-		return err
-	}
-
 	creds := &domain.Credentials{
 		UserID:       user.ID,
 		PasswordHash: hash,
 	}
-	if err := s.cred.Save(ctx, creds); err != nil {
-		return err
-	}
-	return nil
+	err = s.uow.Do(ctx, func(ctx context.Context) error {
+		if err := s.user.Create(ctx, user); err != nil {
+			return err
+		}
+		return s.cred.Save(ctx, creds)
+	})
+	return err
 }

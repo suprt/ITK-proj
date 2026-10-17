@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/suprt/trading/shared/db"
+	shareddb "github.com/suprt/trading/shared/db"
 	"github.com/suprt/trading/user-service/internal/core/domain"
 	er "github.com/suprt/trading/user-service/internal/core/errors"
 )
@@ -20,30 +20,21 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 }
 
 func (r *UserRepo) Create(ctx context.Context, u *domain.User) (err error) {
-	tx, err := r.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if rbErr := tx.Rollback(ctx); rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
-			if err == nil {
-				err = rbErr
-			}
-		}
-	}()
-	_, err = tx.Exec(ctx,
+	db := dbFromContext(ctx, r.pool)
+
+	_, err = db.Exec(ctx,
 		`INSERT INTO users(id, email, roles_version, created_at, updated_at) 
 				VALUES ($1, $2, $3, $4, $5)`,
 		u.ID, u.Email, u.RolesVersion, u.CreatedAt, u.UpdatedAt)
 
 	if err != nil {
-		if db.IsUniqueViolation(err) {
+		if shareddb.IsUniqueViolation(err) {
 			return er.ErrEmailTaken
 		}
 	}
 
 	for _, role := range u.Roles {
-		_, err = tx.Exec(ctx, `
+		_, err = db.Exec(ctx, `
 		INSERT INTO user_roles(user_id, role) VALUES ($1, $2)`,
 			u.ID, string(role))
 
@@ -51,30 +42,20 @@ func (r *UserRepo) Create(ctx context.Context, u *domain.User) (err error) {
 			return err
 		}
 	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (r *UserRepo) Update(ctx context.Context, u *domain.User) (err error) {
-	tx, err := r.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if rbErr := tx.Rollback(ctx); rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
-			if err == nil {
-				err = rbErr
-			}
-		}
-	}()
+	db := dbFromContext(ctx, r.pool)
 
-	res, err := tx.Exec(ctx, `
+	res, err := db.Exec(ctx, `
 		UPDATE users 
 		SET email = $1, roles_version = $2, updated_at = $3
 		WHERE id = $4`,
 		u.Email, u.RolesVersion, u.UpdatedAt, u.ID)
 
 	if err != nil {
-		if db.IsUniqueViolation(err) {
+		if shareddb.IsUniqueViolation(err) {
 			return er.ErrEmailTaken
 		}
 		return err
@@ -84,20 +65,20 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) (err error) {
 		return er.ErrUserNotFound
 	}
 
-	_, err = tx.Exec(ctx, `DELETE FROM user_roles WHERE user_id = $1`, u.ID)
+	_, err = db.Exec(ctx, `DELETE FROM user_roles WHERE user_id = $1`, u.ID)
 	if err != nil {
 		return err
 	}
 
 	for _, role := range u.Roles {
-		_, err = tx.Exec(ctx, `
+		_, err = db.Exec(ctx, `
 		INSERT INTO user_roles(user_id, role) VALUES ($1, $2)`,
 			u.ID, string(role))
 		if err != nil {
 			return err
 		}
 	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (r *UserRepo) GetByID(ctx context.Context, id domain.UserID) (*domain.User, error) {

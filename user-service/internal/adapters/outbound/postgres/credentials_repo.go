@@ -19,7 +19,8 @@ func NewCredentialsRepo(pool *pgxpool.Pool) *CredentialRepo {
 }
 
 func (r *CredentialRepo) Save(ctx context.Context, c *domain.Credentials) error {
-	_, err := r.pool.Exec(ctx, `
+	db := dbFromContext(ctx, r.pool)
+	_, err := db.Exec(ctx, `
         	INSERT INTO credentials (user_id, password_hash)
         	VALUES ($1, $2)
         	ON CONFLICT (user_id) DO UPDATE SET password_hash = EXCLUDED.password_hash
