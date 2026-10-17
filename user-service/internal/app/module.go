@@ -7,8 +7,10 @@ import (
 	"github.com/joho/godotenv"
 	userv1 "github.com/suprt/trading/proto/user/v1"
 	"github.com/suprt/trading/shared/bootstrap"
+	sharedinters "github.com/suprt/trading/shared/interceptors"
+	"github.com/suprt/trading/shared/logger"
 	grpchand "github.com/suprt/trading/user-service/internal/adapters/inbound/grpc"
-	"github.com/suprt/trading/user-service/internal/adapters/inbound/interceptors"
+	userinters "github.com/suprt/trading/user-service/internal/adapters/inbound/interceptors"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/crypto"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/idgen"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/inmemory"
@@ -18,6 +20,7 @@ import (
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
 	userconfig "github.com/suprt/trading/user-service/internal/infrastructure/config"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -53,17 +56,19 @@ func Module(cfg userconfig.Config) fx.Option {
 		),
 
 		fx.Provide(
-			fx.Annotate(
-				interceptors.UnaryValidation,
-				fx.ResultTags(`group:"grpc_server_interceptor"`),
-			),
-			fx.Annotate(
-				func(cfg userconfig.Config, tokens outbound.TokenIssuer) grpc.UnaryServerInterceptor {
-					return interceptors.UnaryAuth(tokens, cfg.Auth.Whitelist)
-				},
-
-				fx.ResultTags(`group:"grpc_server_interceptor"`),
-			),
+			func(
+				logger *zap.Logger,
+				tokens outbound.TokenIssuer,
+				cfg userconfig.Config,
+			) grpc.UnaryServerInterceptor {
+				return sharedinters.Chain(
+					sharedinters.PanicRecovery(logger),
+					sharedinters.XRequestID(),
+					sharedinters.Logger(logger),
+					userinters.UnaryAuth(tokens, cfg.Auth.Whitelist),
+					userinters.UnaryValidation(),
+				)
+			},
 		),
 
 		fx.Provide(
@@ -117,9 +122,32 @@ func Start() {
 		log.Fatal(err)
 	}
 
+	zapLogger, err := logger.New(logger.Config{
+		Level:  cfg.Log.Level,
+		Format: cfg.Log.Format,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func(zapLogger *zap.Logger) {
+		err := zapLogger.Sync()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(zapLogger)
+
+	sugar := zapLogger.Sugar()
+	sugar.Infow("service starting",
+		"name", "user-service",
+		"addr", cfg.GRPC.Addr,
+		"log_level", cfg.Log.Level,
+		"log_format", cfg.Log.Format,
+	)
 	bootstrap.NewApp(bootstrap.Options{
 		Addr:        cfg.GRPC.Addr,
 		Modules:     []fx.Option{Module(*cfg)},
 		StopTimeout: cfg.GRPC.StopTimeout,
+		Log:         zapLogger,
 	}).Run()
+	sugar.Info("service stopped")
 }

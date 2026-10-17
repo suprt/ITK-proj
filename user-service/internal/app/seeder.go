@@ -7,18 +7,21 @@ import (
 	"github.com/suprt/trading/user-service/internal/core/domain"
 	userconfig "github.com/suprt/trading/user-service/internal/infrastructure/config"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 type seederParams struct {
 	fx.In
 
-	LC   fx.Lifecycle
-	Cfg  userconfig.Config
-	Seed *application.Seed
+	LC     fx.Lifecycle
+	Cfg    userconfig.Config
+	Seed   *application.Seed
+	Logger *zap.Logger
 }
 
 func RunSeeder(p seederParams) {
 	if !p.Cfg.Seed.Enabled {
+		p.Logger.Info("seeder disabled")
 		return
 	}
 
@@ -35,10 +38,12 @@ func RunSeeder(p seederParams) {
 					Password: su.Password,
 					Roles:    roles,
 				}); err != nil {
+					p.Logger.Error("seed user failed", zap.String("email", su.Email), zap.Error(err))
 					return err
 				}
 
 			}
+			p.Logger.Info("seed completed")
 			return nil
 		},
 	})

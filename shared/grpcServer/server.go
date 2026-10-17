@@ -3,10 +3,10 @@ package grpcServer
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -15,7 +15,8 @@ type Params struct {
 	LC           fx.Lifecycle
 	Shutdowner   fx.Shutdowner
 	Addr         Addr
-	Interceptors []grpc.UnaryServerInterceptor `group:"grpc_server_interceptor"`
+	Logger       *zap.Logger
+	Interceptors grpc.UnaryServerInterceptor
 }
 type Addr string
 type Result struct {
@@ -25,7 +26,7 @@ type Result struct {
 
 func New(p Params) Result {
 	srv := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(p.Interceptors...))
+		grpc.ChainUnaryInterceptor(p.Interceptors))
 
 	p.LC.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -33,15 +34,16 @@ func New(p Params) Result {
 			if err != nil {
 				return err
 			}
+			p.Logger.Info("grpc server listening", zap.String("addr", string(p.Addr)))
 			go func() {
 				err := srv.Serve(lis)
 
 				if err != nil &&
 					!errors.Is(err, grpc.ErrServerStopped) &&
 					!errors.Is(err, net.ErrClosed) {
-					log.Printf("grpc serve failed: %v", err)
+					p.Logger.Error("grpc serve failed", zap.Error(err))
 					if shutdownErr := p.Shutdowner.Shutdown(); shutdownErr != nil {
-						log.Printf("shutdown failed: %v", shutdownErr)
+						p.Logger.Error("shutdown failed", zap.Error(shutdownErr))
 					}
 				}
 
@@ -56,9 +58,11 @@ func New(p Params) Result {
 			}()
 			select {
 			case <-done:
+				p.Logger.Info("grpc server stopped gracefully")
 				return nil
 			case <-ctx.Done():
 				srv.Stop()
+				p.Logger.Warn("grpc server stopped by timeout")
 				return ctx.Err()
 			}
 

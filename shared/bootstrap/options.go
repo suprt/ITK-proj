@@ -4,10 +4,12 @@ import (
 	"time"
 
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 type Options struct {
 	Addr        string
 	Modules     []fx.Option
 	StopTimeout time.Duration
-} //TODO:  log
+	Log         *zap.Logger
+}
