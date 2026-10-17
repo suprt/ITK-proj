@@ -31,14 +31,19 @@ type Seed struct {
 type Config struct {
 	sharedconfig.Log
 	sharedconfig.JWTSecret
-	GRPC GRPC
-	JWT  JWT
-	Seed Seed `yaml:"seed"`
-	Auth Auth `yaml:"auth"`
+	GRPC   GRPC
+	JWT    JWT
+	Crypto Crypto
+	Seed   Seed `yaml:"seed"`
+	Auth   Auth `yaml:"auth"`
 }
 
 type Auth struct {
 	Whitelist map[string]struct{}
+}
+
+type Crypto struct {
+	HashCost int `env:"CRYPTO_HASH_COST" envDefault:"10"`
 }
 
 func Load(yamlPath string) (*Config, error) {

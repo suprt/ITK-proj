@@ -2,17 +2,23 @@ package crypto
 
 import "golang.org/x/crypto/bcrypt"
 
-type BcryptHasher struct{}
+type BcryptHasher struct {
+	cost int
+}
 
-func (BcryptHasher) Hash(plain string) (string, error) {
-	b, err := bcrypt.GenerateFromPassword([]byte(plain), bcrypt.DefaultCost)
+type Config struct {
+	HashCost int
+}
+
+func (bc *BcryptHasher) Hash(plain string) (string, error) {
+	b, err := bcrypt.GenerateFromPassword([]byte(plain), bc.cost)
 	return string(b), err
 }
 
-func (BcryptHasher) Compare(hash string, plain string) error {
+func (bc *BcryptHasher) Compare(hash string, plain string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(plain))
 }
 
-func NewBcryptHasher() *BcryptHasher {
-	return &BcryptHasher{}
+func NewBcryptHasher(cfg Config) *BcryptHasher {
+	return &BcryptHasher{cost: cfg.HashCost}
 }

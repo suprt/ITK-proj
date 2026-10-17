@@ -53,6 +53,11 @@ func Module(cfg userconfig.Config) fx.Option {
 					AccessTTL:  cfg.JWT.AccessTTL,
 				}
 			},
+			func(cfg userconfig.Config) crypto.Config {
+				return crypto.Config{
+					HashCost: cfg.Crypto.HashCost,
+				}
+			},
 		),
 
 		fx.Provide(
