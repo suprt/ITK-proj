@@ -21,20 +21,20 @@ func NewLogoutUseCase(sessions outbound.SessionRepository) *LogoutUseCase {
 }
 
 func (uc *LogoutUseCase) Logout(ctx context.Context, in dto.LogoutInput) error {
-	callerID, ok:=auth.UserIDFromContext(ctx)
-	if !ok{
+	callerID, ok := auth.UserIDFromContext(ctx)
+	if !ok {
 		return er.ErrUnauthenticated
 	}
 
-	session, err:=uc.sessions.GetByToken(ctx, in.RefreshToken)
-	if err != nil{
+	session, err := uc.sessions.GetByToken(ctx, in.RefreshToken)
+	if err != nil {
 		if errors.Is(err, er.ErrInvalidToken) {
 			return nil
 		}
 		return err
 	}
 
-	if session.UserID != callerID{
+	if session.UserID != callerID {
 		return er.ErrForbidden
 	}
 

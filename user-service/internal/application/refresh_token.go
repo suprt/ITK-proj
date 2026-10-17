@@ -65,11 +65,12 @@ func (r *RefreshTokenUseCase) RefreshToken(ctx context.Context, in dto.RefreshTo
 	if err != nil {
 		return nil, err
 	}
-
+	now := time.Now()
 	newSession := &domain.RefreshSession{
 		Token:     newRefresh,
 		UserID:    user.ID,
-		ExpiresAt: time.Now().Add(r.refreshTTL),
+		ExpiresAt: now.Add(r.refreshTTL),
+		IssuedAt:  now,
 	}
 	if err := r.sessions.Save(ctx, newSession); err != nil {
 		return nil, err

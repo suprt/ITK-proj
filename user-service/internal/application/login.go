@@ -73,11 +73,12 @@ func (l *LoginUseCase) Login(ctx context.Context, in dto.LoginInput) (*dto.Login
 	if err != nil {
 		return nil, err
 	}
-
+	now := time.Now()
 	session := &domain.RefreshSession{
 		Token:     refresh,
 		UserID:    user.ID,
-		ExpiresAt: time.Now().Add(l.refreshTTL),
+		ExpiresAt: now.Add(l.refreshTTL),
+		IssuedAt:  now,
 	}
 	if err := l.sessions.Save(ctx, session); err != nil {
 		return nil, err

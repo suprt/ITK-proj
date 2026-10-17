@@ -6,6 +6,7 @@ type RefreshSession struct {
 	Token     RefreshToken
 	UserID    UserID
 	ExpiresAt time.Time
+	IssuedAt  time.Time
 }
 
 func (s *RefreshSession) Expired(now time.Time) bool {

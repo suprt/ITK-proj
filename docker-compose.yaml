@@ -1,0 +1,54 @@
+services:
+  postgres-user:
+    image: postgres:16-alpine
+    container_name: trading-postgres-user
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready -U trading -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  postgres-spot:
+    image: postgres:16-alpine
+    container_name: trading-postgres-spot
+    environment:
+      POSTGRES_DB: spot_db
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_spot_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready -U trading -d spot_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  postgres-order:
+    image: postgres:16-alpine
+    container_name: trading-postgres-order
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: trading
+      POSTGRES_PASSWORD: trading
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_order_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready -U trading -d order_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_user_data:
+  postgres_spot_data:
+  postgres_order_data:

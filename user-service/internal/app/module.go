@@ -1,24 +1,27 @@
 package app
 
 import (
+	"context"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 	userv1 "github.com/suprt/trading/proto/user/v1"
 	"github.com/suprt/trading/shared/bootstrap"
+	"github.com/suprt/trading/shared/db"
 	sharedinters "github.com/suprt/trading/shared/interceptors"
 	"github.com/suprt/trading/shared/logger"
 	grpchand "github.com/suprt/trading/user-service/internal/adapters/inbound/grpc"
 	userinters "github.com/suprt/trading/user-service/internal/adapters/inbound/interceptors"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/crypto"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/idgen"
-	"github.com/suprt/trading/user-service/internal/adapters/outbound/inmemory"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/jwt"
+	"github.com/suprt/trading/user-service/internal/adapters/outbound/postgres"
 	"github.com/suprt/trading/user-service/internal/application"
 	"github.com/suprt/trading/user-service/internal/core/ports/inbound"
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
 	userconfig "github.com/suprt/trading/user-service/internal/infrastructure/config"
+	"github.com/suprt/trading/user-service/internal/infrastructure/migrations"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -31,6 +34,24 @@ func Module(cfg userconfig.Config) fx.Option {
 			return cfg
 		}),
 
+		fx.Provide(
+			func(cfg userconfig.Config) db.Config {
+				return db.Config{
+					DSN:             cfg.Postgres.DSN,
+					MaxConns:        cfg.Postgres.MaxConns,
+					MinConns:        cfg.Postgres.MinConns,
+					MaxConnLifetime: cfg.Postgres.MaxConnLifetime,
+				}
+			},
+			db.NewPostgres,
+		),
+		fx.Invoke(func(lc fx.Lifecycle, cfg userconfig.Config) {
+			lc.Append(fx.Hook{
+				OnStart: func(ctx context.Context) error {
+					return migrations.Up(ctx, cfg.Postgres.DSN)
+				},
+			})
+		}),
 		fx.Provide(
 			func(cfg userconfig.Config) jwt.Config {
 				return jwt.Config{
@@ -77,9 +98,9 @@ func Module(cfg userconfig.Config) fx.Option {
 		),
 
 		fx.Provide(
-			fx.Annotate(inmemory.NewUserRepo, fx.As(new(outbound.UserRepository))),
-			fx.Annotate(inmemory.NewCredentialsRepo, fx.As(new(outbound.CredentialsRepository))),
-			fx.Annotate(inmemory.NewSessionRepo, fx.As(new(outbound.SessionRepository))),
+			fx.Annotate(postgres.NewUserRepo, fx.As(new(outbound.UserRepository))),
+			fx.Annotate(postgres.NewCredentialsRepo, fx.As(new(outbound.CredentialsRepository))),
+			fx.Annotate(postgres.NewSessionRepo, fx.As(new(outbound.SessionRepository))),
 			fx.Annotate(crypto.NewBcryptHasher, fx.As(new(outbound.PasswordHasher))),
 			fx.Annotate(idgen.NewUUIDGen, fx.As(new(outbound.IDGenerator))),
 			fx.Annotate(jwt.NewJWTIssuer, fx.As(new(outbound.TokenIssuer))),
