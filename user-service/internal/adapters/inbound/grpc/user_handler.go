@@ -7,6 +7,7 @@ import (
 	"github.com/suprt/trading/user-service/internal/core/domain"
 	"github.com/suprt/trading/user-service/internal/core/dto"
 	"github.com/suprt/trading/user-service/internal/core/ports/inbound"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Handler struct {
@@ -120,4 +121,20 @@ func (h *Handler) RemoveRole(ctx context.Context, req *userv1.RemoveRoleRequest)
 		return nil, mapErr(err)
 	}
 	return &userv1.RemoveRoleResponse{}, nil
+}
+
+func (h *Handler) GetPublicProfile(ctx context.Context, req *userv1.GetPublicProfileRequest) (*userv1.GetPublicProfileResponse, error) {
+	out, err := h.userService.GetPublicProfile(ctx, dto.GetPublicProfileInput{
+		UserID: domain.UserID(req.GetUserId()),
+	})
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.GetPublicProfileResponse{
+		Profile: &userv1.PublicProfile{
+			Id:        string(out.UserID),
+			Username:  out.Username,
+			CreatedAt: timestamppb.New(out.CreateAt),
+		},
+	}, nil
 }

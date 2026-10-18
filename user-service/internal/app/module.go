@@ -118,6 +118,7 @@ func Module(cfg userconfig.Config) fx.Option {
 			application.NewAddRoleUseCase,
 			application.NewRemoveRoleUseCase,
 			application.NewService,
+			application.NewGetPublicProfileUseCase,
 		),
 
 		fx.Provide(

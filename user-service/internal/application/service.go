@@ -9,6 +9,7 @@ type Service struct {
 	*GetUserByIDUseCase
 	*AddRoleUseCase
 	*RemoveRoleUseCase
+	*GetPublicProfileUseCase
 }
 
 func NewService(
@@ -20,15 +21,17 @@ func NewService(
 	getUserByID *GetUserByIDUseCase,
 	addRole *AddRoleUseCase,
 	removeRole *RemoveRoleUseCase,
+	getPublicProfile *GetPublicProfileUseCase,
 ) *Service {
 	return &Service{
-		RegisterUseCase:       register,
-		LoginUseCase:          login,
-		RefreshTokenUseCase:   refreshToken,
-		LogoutUseCase:         logout,
-		GetSelfProfileUseCase: getSelfProfile,
-		GetUserByIDUseCase:    getUserByID,
-		AddRoleUseCase:        addRole,
-		RemoveRoleUseCase:     removeRole,
+		RegisterUseCase:         register,
+		LoginUseCase:            login,
+		RefreshTokenUseCase:     refreshToken,
+		LogoutUseCase:           logout,
+		GetSelfProfileUseCase:   getSelfProfile,
+		GetUserByIDUseCase:      getUserByID,
+		AddRoleUseCase:          addRole,
+		RemoveRoleUseCase:       removeRole,
+		GetPublicProfileUseCase: getPublicProfile,
 	}
 }
