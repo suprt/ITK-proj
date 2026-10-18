@@ -4,7 +4,6 @@ package user.v1;
 
 import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/descriptor.proto";
 
 option go_package = "github.com/suprt/trading/proto/user/v1;user_v1";
 
@@ -26,15 +25,23 @@ service UserService {
   rpc Logout(LogoutRequest) returns (LogoutResponse);
   rpc AddRole(AddRoleRequest) returns (AddRoleResponse);
   rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse);
+  rpc GetPublicProfile(GetPublicProfileRequest) returns (GetPublicProfileResponse);
 }
 
 message User {
   string id = 1;
   string email = 2;
-  repeated Role roles = 3;
-  int64 roles_version = 4;
-  google.protobuf.Timestamp created_at = 5;
-  google.protobuf.Timestamp updated_at = 6;
+  string username= 3;
+  repeated Role roles = 4;
+  int64 roles_version = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message PublicProfile {
+  string id =1;
+  string username = 2;
+  google.protobuf.Timestamp created_at = 3;
 }
 
 message RegisterRequest {
@@ -43,7 +50,11 @@ message RegisterRequest {
     (buf.validate.field).string.min_len = 1
   ];
   string password = 2 [(buf.validate.field).string.min_len = 8];
-  //username
+  string username = 3 [
+    (buf.validate.field).string.min_len = 3,
+    (buf.validate.field).string.max_len = 30,
+    (buf.validate.field).string.pattern = "^[a-zA-Z0-9_]+$"
+  ];
 }
 
 message RegisterResponse {
@@ -75,7 +86,7 @@ message RefreshTokenResponse {
   int64 access_expires_in = 3; //seconds
 }
 
-//публичный метод, user_id из токена
+
 message GetSelfProfileRequest {}
 
 message GetSelfProfileResponse {
@@ -114,3 +125,11 @@ message RemoveRoleRequest {
   ];
 }
 message RemoveRoleResponse {}
+
+message GetPublicProfileRequest {
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message GetPublicProfileResponse {
+  PublicProfile profile = 1;
+}

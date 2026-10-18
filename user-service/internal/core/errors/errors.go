@@ -13,4 +13,5 @@ var (
 	ErrDuplicateID        = errors.New("duplicate ID")
 	ErrUnauthenticated    = errors.New("unauthenticated")
 	ErrInvalidRole        = errors.New("invalid role")
+	ErrUsernameTaken      = errors.New("username already taken")
 )

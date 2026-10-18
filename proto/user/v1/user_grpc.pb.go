@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Register_FullMethodName       = "/user.v1.UserService/Register"
-	UserService_Login_FullMethodName          = "/user.v1.UserService/Login"
-	UserService_RefreshToken_FullMethodName   = "/user.v1.UserService/RefreshToken"
-	UserService_GetSelfProfile_FullMethodName = "/user.v1.UserService/GetSelfProfile"
-	UserService_GetUserByID_FullMethodName    = "/user.v1.UserService/GetUserByID"
-	UserService_Logout_FullMethodName         = "/user.v1.UserService/Logout"
-	UserService_AddRole_FullMethodName        = "/user.v1.UserService/AddRole"
-	UserService_RemoveRole_FullMethodName     = "/user.v1.UserService/RemoveRole"
+	UserService_Register_FullMethodName         = "/user.v1.UserService/Register"
+	UserService_Login_FullMethodName            = "/user.v1.UserService/Login"
+	UserService_RefreshToken_FullMethodName     = "/user.v1.UserService/RefreshToken"
+	UserService_GetSelfProfile_FullMethodName   = "/user.v1.UserService/GetSelfProfile"
+	UserService_GetUserByID_FullMethodName      = "/user.v1.UserService/GetUserByID"
+	UserService_Logout_FullMethodName           = "/user.v1.UserService/Logout"
+	UserService_AddRole_FullMethodName          = "/user.v1.UserService/AddRole"
+	UserService_RemoveRole_FullMethodName       = "/user.v1.UserService/RemoveRole"
+	UserService_GetPublicProfile_FullMethodName = "/user.v1.UserService/GetPublicProfile"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -41,6 +42,7 @@ type UserServiceClient interface {
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 	AddRole(ctx context.Context, in *AddRoleRequest, opts ...grpc.CallOption) (*AddRoleResponse, error)
 	RemoveRole(ctx context.Context, in *RemoveRoleRequest, opts ...grpc.CallOption) (*RemoveRoleResponse, error)
+	GetPublicProfile(ctx context.Context, in *GetPublicProfileRequest, opts ...grpc.CallOption) (*GetPublicProfileResponse, error)
 }
 
 type userServiceClient struct {
@@ -131,6 +133,16 @@ func (c *userServiceClient) RemoveRole(ctx context.Context, in *RemoveRoleReques
 	return out, nil
 }
 
+func (c *userServiceClient) GetPublicProfile(ctx context.Context, in *GetPublicProfileRequest, opts ...grpc.CallOption) (*GetPublicProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPublicProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_GetPublicProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -143,6 +155,7 @@ type UserServiceServer interface {
 	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 	AddRole(context.Context, *AddRoleRequest) (*AddRoleResponse, error)
 	RemoveRole(context.Context, *RemoveRoleRequest) (*RemoveRoleResponse, error)
+	GetPublicProfile(context.Context, *GetPublicProfileRequest) (*GetPublicProfileResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -176,6 +189,9 @@ func (UnimplementedUserServiceServer) AddRole(context.Context, *AddRoleRequest) 
 }
 func (UnimplementedUserServiceServer) RemoveRole(context.Context, *RemoveRoleRequest) (*RemoveRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RemoveRole not implemented")
+}
+func (UnimplementedUserServiceServer) GetPublicProfile(context.Context, *GetPublicProfileRequest) (*GetPublicProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPublicProfile not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -342,6 +358,24 @@ func _UserService_RemoveRole_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetPublicProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPublicProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetPublicProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetPublicProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetPublicProfile(ctx, req.(*GetPublicProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +414,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveRole",
 			Handler:    _UserService_RemoveRole_Handler,
+		},
+		{
+			MethodName: "GetPublicProfile",
+			Handler:    _UserService_GetPublicProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -8,11 +8,14 @@ seed:
   enabled: true
   users:
     - email: admin@local
+      username: admin
       password: admin12345
       roles: [ USER, ADMIN ]
     - email: trader@local
+      username: trader
       password: trader12345
       roles: [ USER, TRADER ]
     - email: user@local
+      username: user
       password: user12345
       roles: [ USER ]

@@ -51,7 +51,8 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 	user := &domain.User{
 		ID:           domain.UserID(r.ids.New()),
 		Email:        in.Email,
-		Roles:        []domain.Role{domain.RoleUser}, //всегда создаётся с User, другие роли могут быть выданы через GrantRole
+		Username:     in.Username,
+		Roles:        []domain.Role{domain.RoleUser}, //всегда создаётся с User, другие роли могут быть выданы через AddRole
 		RolesVersion: 1,
 		CreatedAt:    now,
 		UpdatedAt:    now,

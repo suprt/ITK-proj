@@ -12,6 +12,7 @@ import (
 
 type SeedUserInput struct {
 	Email    string
+	Username string
 	Password string
 	Roles    []domain.Role
 }
@@ -58,6 +59,7 @@ func (s *Seed) SeedUser(ctx context.Context, in SeedUserInput) error {
 	user := &domain.User{
 		ID:           domain.UserID(s.ids.New()),
 		Email:        in.Email,
+		Username:     in.Username,
 		Roles:        in.Roles,
 		RolesVersion: 1,
 		CreatedAt:    now,

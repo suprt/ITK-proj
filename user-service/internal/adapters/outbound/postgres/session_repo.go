@@ -19,7 +19,8 @@ func NewSessionRepo(pool *pgxpool.Pool) *SessionRepo {
 }
 
 func (r *SessionRepo) Save(ctx context.Context, s *domain.RefreshSession) error {
-	_, err := r.pool.Exec(ctx, `
+	db := dbFromContext(ctx, r.pool)
+	_, err := db.Exec(ctx, `
 				INSERT INTO sessions (token, user_id, expires_at, issued_at)
 				VALUES ($1, $2, $3, $4)`,
 		s.Token, s.UserID, s.ExpiresAt, s.IssuedAt)
@@ -28,7 +29,8 @@ func (r *SessionRepo) Save(ctx context.Context, s *domain.RefreshSession) error 
 
 func (r *SessionRepo) GetByToken(ctx context.Context, t domain.RefreshToken) (*domain.RefreshSession, error) {
 	var s domain.RefreshSession
-	err := r.pool.QueryRow(ctx, `
+	db := dbFromContext(ctx, r.pool)
+	err := db.QueryRow(ctx, `
 				SELECT token, user_id, expires_at, issued_at
 				FROM sessions WHERE token = $1`,
 		t).Scan(&s.Token, &s.UserID, &s.ExpiresAt, &s.IssuedAt)
@@ -43,11 +45,13 @@ func (r *SessionRepo) GetByToken(ctx context.Context, t domain.RefreshToken) (*d
 }
 
 func (r *SessionRepo) Delete(ctx context.Context, t domain.RefreshToken) error {
-	_, err := r.pool.Exec(ctx, `DELETE FROM sessions WHERE token = $1`, t)
+	db := dbFromContext(ctx, r.pool)
+	_, err := db.Exec(ctx, `DELETE FROM sessions WHERE token = $1`, t)
 	return err
 }
 
 func (r *SessionRepo) DeleteByUserID(ctx context.Context, userID domain.UserID) error {
-	_, err := r.pool.Exec(ctx, `DELETE FROM sessions WHERE user_id = $1`, userID)
+	db := dbFromContext(ctx, r.pool)
+	_, err := db.Exec(ctx, `DELETE FROM sessions WHERE user_id = $1`, userID)
 	return err
 }

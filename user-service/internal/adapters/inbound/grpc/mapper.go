@@ -41,6 +41,7 @@ func userToProto(u *domain.User) *userv1.User {
 	return &userv1.User{
 		Id:           string(u.ID),
 		Email:        u.Email,
+		Username:     u.Username,
 		Roles:        roles,
 		RolesVersion: u.RolesVersion,
 		CreatedAt:    timestamppb.New(u.CreatedAt),

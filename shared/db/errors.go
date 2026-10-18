@@ -8,10 +8,14 @@ import (
 
 const pgUniqueViolation = "23505"
 
-func IsUniqueViolation(err error) bool {
+type UniqueViolation struct {
+	Constraint string
+}
+
+func AsUniqueViolation(err error) (*UniqueViolation, bool) {
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == pgUniqueViolation
+	if errors.As(err, &pgErr) && pgErr.Code == pgUniqueViolation {
+		return &UniqueViolation{Constraint: pgErr.ConstraintName}, true
 	}
-	return false
+	return nil, false
 }

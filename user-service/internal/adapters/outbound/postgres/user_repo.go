@@ -23,14 +23,20 @@ func (r *UserRepo) Create(ctx context.Context, u *domain.User) (err error) {
 	db := dbFromContext(ctx, r.pool)
 
 	_, err = db.Exec(ctx,
-		`INSERT INTO users(id, email, roles_version, created_at, updated_at) 
-				VALUES ($1, $2, $3, $4, $5)`,
-		u.ID, u.Email, u.RolesVersion, u.CreatedAt, u.UpdatedAt)
+		`INSERT INTO users(id, email, username, roles_version, created_at, updated_at) 
+				VALUES ($1, $2, $3, $4, $5, $6)`,
+		u.ID, u.Email, u.Username, u.RolesVersion, u.CreatedAt, u.UpdatedAt)
 
 	if err != nil {
-		if shareddb.IsUniqueViolation(err) {
-			return er.ErrEmailTaken
+		if uv, ok := shareddb.AsUniqueViolation(err); ok {
+			switch uv.Constraint {
+			case "users_email_unique":
+				return er.ErrEmailTaken
+			case "users_username_unique":
+				return er.ErrUsernameTaken
+			}
 		}
+		return err
 	}
 
 	for _, role := range u.Roles {
@@ -50,13 +56,18 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) (err error) {
 
 	res, err := db.Exec(ctx, `
 		UPDATE users 
-		SET email = $1, roles_version = $2, updated_at = $3
-		WHERE id = $4`,
-		u.Email, u.RolesVersion, u.UpdatedAt, u.ID)
+		SET email = $1, username = $2, roles_version = $3, updated_at = $4
+		WHERE id = $5`,
+		u.Email, u.Username, u.RolesVersion, u.UpdatedAt, u.ID)
 
 	if err != nil {
-		if shareddb.IsUniqueViolation(err) {
-			return er.ErrEmailTaken
+		if uv, ok := shareddb.AsUniqueViolation(err); ok {
+			switch uv.Constraint {
+			case "users_email_unique":
+				return er.ErrEmailTaken
+			case "users_username_unique":
+				return er.ErrUsernameTaken
+			}
 		}
 		return err
 	}
@@ -85,15 +96,15 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) (err error) {
 func (r *UserRepo) GetByID(ctx context.Context, id domain.UserID) (*domain.User, error) {
 	var u domain.User
 	var roles []string
-
-	err := r.pool.QueryRow(ctx, `
- 			SELECT u.id, u.email, u.roles_version, u.created_at, u.updated_at,
+	db := dbFromContext(ctx, r.pool)
+	err := db.QueryRow(ctx, `
+ 			SELECT u.id, u.email, u.username, u.roles_version, u.created_at, u.updated_at,
  			COALESCE(array_agg(r.role) FILTER ( WHERE r.role IS NOT NULL), '{}') AS roles
  			FROM users u 
  			LEFT JOIN user_roles r ON r.user_id = u.id
  			WHERE u.id = $1
  			GROUP BY u.id`, id).Scan(
-		&u.ID, &u.Email, &u.RolesVersion, &u.CreatedAt, &u.UpdatedAt, &roles)
+		&u.ID, &u.Email, &u.Username, &u.RolesVersion, &u.CreatedAt, &u.UpdatedAt, &roles)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, er.ErrUserNotFound
@@ -111,15 +122,15 @@ func (r *UserRepo) GetByID(ctx context.Context, id domain.UserID) (*domain.User,
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var u domain.User
 	var roles []string
-
-	err := r.pool.QueryRow(ctx, `
- 			SELECT u.id, u.email, u.roles_version, u.created_at, u.updated_at,
+	db := dbFromContext(ctx, r.pool)
+	err := db.QueryRow(ctx, `
+ 			SELECT u.id, u.email, u.username, u.roles_version, u.created_at, u.updated_at,
  			COALESCE(array_agg(r.role) FILTER ( WHERE r.role IS NOT NULL), '{}') AS roles
  			FROM users u 
  			LEFT JOIN user_roles r ON r.user_id = u.id
  			WHERE u.email = $1
  			GROUP BY u.id`, email).Scan(
-		&u.ID, &u.Email, &u.RolesVersion, &u.CreatedAt, &u.UpdatedAt, &roles)
+		&u.ID, &u.Email, &u.Username, &u.RolesVersion, &u.CreatedAt, &u.UpdatedAt, &roles)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, er.ErrUserNotFound

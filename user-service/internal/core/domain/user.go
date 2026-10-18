@@ -17,6 +17,7 @@ const (
 type User struct {
 	ID           UserID
 	Email        string
+	Username     string
 	Roles        []Role
 	RolesVersion int64
 	CreatedAt    time.Time

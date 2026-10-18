@@ -35,6 +35,7 @@ func RunSeeder(p seederParams) {
 
 				if err := p.Seed.SeedUser(ctx, application.SeedUserInput{
 					Email:    su.Email,
+					Username: su.Username,
 					Password: su.Password,
 					Roles:    roles,
 				}); err != nil {

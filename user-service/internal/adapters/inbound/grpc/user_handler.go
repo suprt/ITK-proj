@@ -21,6 +21,7 @@ func New(userService inbound.UserService) *Handler {
 func (h *Handler) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
 	out, err := h.userService.Register(ctx, dto.RegisterInput{
 		Email:    req.GetEmail(),
+		Username: req.GetUsername(),
 		Password: req.GetPassword(),
 	})
 	if err != nil {

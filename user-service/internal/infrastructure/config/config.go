@@ -20,6 +20,7 @@ type JWT struct {
 
 type SeedUser struct {
 	Email    string
+	Username string
 	Password string
 	Roles    []string
 }

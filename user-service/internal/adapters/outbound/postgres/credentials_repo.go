@@ -30,7 +30,8 @@ func (r *CredentialRepo) Save(ctx context.Context, c *domain.Credentials) error 
 
 func (r *CredentialRepo) GetByID(ctx context.Context, userID domain.UserID) (*domain.Credentials, error) {
 	var c domain.Credentials
-	err := r.pool.QueryRow(ctx, `
+	db := dbFromContext(ctx, r.pool)
+	err := db.QueryRow(ctx, `
 			SELECT user_id, password_hash FROM credentials WHERE user_id = $1`,
 		userID).Scan(&c.UserID, &c.PasswordHash)
 	if errors.Is(err, pgx.ErrNoRows) {

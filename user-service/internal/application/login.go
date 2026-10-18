@@ -22,6 +22,7 @@ type LoginUseCase struct {
 	sessions   outbound.SessionRepository
 	hasher     outbound.PasswordHasher
 	tokens     outbound.TokenIssuer
+	uow        outbound.UnitOfWork
 	refreshTTL time.Duration
 	accessTTL  time.Duration
 }
@@ -32,6 +33,7 @@ func NewLoginUseCase(
 	sessions outbound.SessionRepository,
 	hasher outbound.PasswordHasher,
 	tokens outbound.TokenIssuer,
+	uow outbound.UnitOfWork,
 	cfg LoginConfig,
 ) *LoginUseCase {
 	return &LoginUseCase{
@@ -40,47 +42,60 @@ func NewLoginUseCase(
 		sessions:   sessions,
 		hasher:     hasher,
 		tokens:     tokens,
+		uow:        uow,
 		refreshTTL: cfg.RefreshTTL,
 		accessTTL:  cfg.AccessTTL,
 	}
 }
 
 func (l *LoginUseCase) Login(ctx context.Context, in dto.LoginInput) (*dto.LoginOutput, error) {
-	user, err := l.users.GetByEmail(ctx, in.Email)
-	if err != nil {
-		if errors.Is(err, er.ErrUserNotFound) {
-			return nil, er.ErrInvalidCredentials
-		}
-		return nil, err
-	}
+	var user *domain.User
+	var access domain.AccessToken
+	var refresh domain.RefreshToken
 
-	creds, err := l.cred.GetByID(ctx, user.ID)
-	if err != nil {
-		if errors.Is(err, er.ErrUserNotFound) {
-			return nil, er.ErrInvalidCredentials
+	err := l.uow.Do(ctx, func(ctx context.Context) error {
+		var err error
+		user, err = l.users.GetByEmail(ctx, in.Email)
+		if err != nil {
+			if errors.Is(err, er.ErrUserNotFound) {
+				return er.ErrInvalidCredentials
+			}
+			return err
 		}
-		return nil, err
-	}
-	if err := l.hasher.Compare(creds.PasswordHash, in.Password); err != nil {
-		return nil, er.ErrInvalidCredentials
-	}
 
-	access, err := l.tokens.IssueAccess(user.ID, user.Roles, user.RolesVersion)
+		creds, err := l.cred.GetByID(ctx, user.ID)
+		if err != nil {
+			if errors.Is(err, er.ErrUserNotFound) {
+				return er.ErrInvalidCredentials
+			}
+			return err
+		}
+
+		if err := l.hasher.Compare(creds.PasswordHash, in.Password); err != nil {
+			return er.ErrInvalidCredentials
+		}
+
+		access, err = l.tokens.IssueAccess(user.ID, user.Roles, user.RolesVersion)
+		if err != nil {
+			return err
+		}
+
+		refresh, err = l.tokens.NewRefresh()
+		if err != nil {
+			return err
+		}
+
+		now := time.Now()
+		session := &domain.RefreshSession{
+			Token:     refresh,
+			UserID:    user.ID,
+			ExpiresAt: now.Add(l.refreshTTL),
+			IssuedAt:  now,
+		}
+
+		return l.sessions.Save(ctx, session)
+	})
 	if err != nil {
-		return nil, err
-	}
-	refresh, err := l.tokens.NewRefresh()
-	if err != nil {
-		return nil, err
-	}
-	now := time.Now()
-	session := &domain.RefreshSession{
-		Token:     refresh,
-		UserID:    user.ID,
-		ExpiresAt: now.Add(l.refreshTTL),
-		IssuedAt:  now,
-	}
-	if err := l.sessions.Save(ctx, session); err != nil {
 		return nil, err
 	}
 
