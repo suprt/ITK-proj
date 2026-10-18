@@ -78,6 +78,7 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) (err error) {
 			return err
 		}
 	}
+
 	return nil
 }
 

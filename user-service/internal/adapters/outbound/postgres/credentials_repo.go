@@ -21,10 +21,10 @@ func NewCredentialsRepo(pool *pgxpool.Pool) *CredentialRepo {
 func (r *CredentialRepo) Save(ctx context.Context, c *domain.Credentials) error {
 	db := dbFromContext(ctx, r.pool)
 	_, err := db.Exec(ctx, `
-        	INSERT INTO credentials (user_id, password_hash)
-        	VALUES ($1, $2)
-        	ON CONFLICT (user_id) DO UPDATE SET password_hash = EXCLUDED.password_hash
-        	`, c.UserID, c.PasswordHash)
+       	INSERT INTO credentials (user_id, password_hash)
+       	VALUES ($1, $2)
+       	ON CONFLICT (user_id) DO UPDATE SET password_hash = EXCLUDED.password_hash
+       	`, c.UserID, c.PasswordHash)
 	return err
 }
 

@@ -36,7 +36,6 @@ func NewRegisterUseCase(
 }
 
 func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*dto.RegisterOutput, error) {
-
 	_, err := r.users.GetByEmail(ctx, in.Email)
 	if err == nil {
 		return nil, er.ErrEmailTaken
@@ -44,7 +43,6 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 	if !errors.Is(err, er.ErrUserNotFound) {
 		return nil, err
 	}
-
 	hash, err := r.hasher.Hash(in.Password)
 	if err != nil {
 		return nil, err
@@ -59,7 +57,6 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 		UpdatedAt:    now,
 	}
 	creds := &domain.Credentials{UserID: user.ID, PasswordHash: hash}
-
 	err = r.uow.Do(ctx, func(ctx context.Context) error {
 		if err := r.users.Create(ctx, user); err != nil {
 			return err
