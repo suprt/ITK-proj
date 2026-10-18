@@ -3,7 +3,7 @@ auth:
     /user.v1.UserService/Register: {}
     /user.v1.UserService/Login: {}
     /user.v1.UserService/RefreshToken: {}
-    /user.v1.UserSevice/GetPublicProfile: {}
+    /user.v1.UserService/GetPublicProfile: {}
 
 seed:
   enabled: true

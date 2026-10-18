@@ -26,6 +26,7 @@ service UserService {
   rpc AddRole(AddRoleRequest) returns (AddRoleResponse);
   rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse);
   rpc GetPublicProfile(GetPublicProfileRequest) returns (GetPublicProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
 }
 
 message User {
@@ -133,3 +134,17 @@ message GetPublicProfileRequest {
 message GetPublicProfileResponse {
   PublicProfile profile = 1;
 }
+
+message UpdateProfileRequest{
+  optional string email = 1 [
+    (buf.validate.field).string.email = true
+  ];
+  optional string username = 2 [
+    (buf.validate.field).string.min_len = 3,
+    (buf.validate.field).string.max_len=30,
+    (buf.validate.field).string.pattern = "^[a-zA-Z0-9_]+$"
+  ];
+}
+
+message UpdateProfileResponse{}
+

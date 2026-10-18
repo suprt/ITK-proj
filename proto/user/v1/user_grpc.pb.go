@@ -28,6 +28,7 @@ const (
 	UserService_AddRole_FullMethodName          = "/user.v1.UserService/AddRole"
 	UserService_RemoveRole_FullMethodName       = "/user.v1.UserService/RemoveRole"
 	UserService_GetPublicProfile_FullMethodName = "/user.v1.UserService/GetPublicProfile"
+	UserService_UpdateProfile_FullMethodName    = "/user.v1.UserService/UpdateProfile"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -43,6 +44,7 @@ type UserServiceClient interface {
 	AddRole(ctx context.Context, in *AddRoleRequest, opts ...grpc.CallOption) (*AddRoleResponse, error)
 	RemoveRole(ctx context.Context, in *RemoveRoleRequest, opts ...grpc.CallOption) (*RemoveRoleResponse, error)
 	GetPublicProfile(ctx context.Context, in *GetPublicProfileRequest, opts ...grpc.CallOption) (*GetPublicProfileResponse, error)
+	UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*UpdateProfileResponse, error)
 }
 
 type userServiceClient struct {
@@ -143,6 +145,16 @@ func (c *userServiceClient) GetPublicProfile(ctx context.Context, in *GetPublicP
 	return out, nil
 }
 
+func (c *userServiceClient) UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*UpdateProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_UpdateProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -156,6 +168,7 @@ type UserServiceServer interface {
 	AddRole(context.Context, *AddRoleRequest) (*AddRoleResponse, error)
 	RemoveRole(context.Context, *RemoveRoleRequest) (*RemoveRoleResponse, error)
 	GetPublicProfile(context.Context, *GetPublicProfileRequest) (*GetPublicProfileResponse, error)
+	UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -192,6 +205,9 @@ func (UnimplementedUserServiceServer) RemoveRole(context.Context, *RemoveRoleReq
 }
 func (UnimplementedUserServiceServer) GetPublicProfile(context.Context, *GetPublicProfileRequest) (*GetPublicProfileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPublicProfile not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateProfile not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -376,6 +392,24 @@ func _UserService_GetPublicProfile_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_UpdateProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateProfile(ctx, req.(*UpdateProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -418,6 +452,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPublicProfile",
 			Handler:    _UserService_GetPublicProfile_Handler,
+		},
+		{
+			MethodName: "UpdateProfile",
+			Handler:    _UserService_UpdateProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

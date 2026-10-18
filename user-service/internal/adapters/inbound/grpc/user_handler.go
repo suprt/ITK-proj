@@ -138,3 +138,18 @@ func (h *Handler) GetPublicProfile(ctx context.Context, req *userv1.GetPublicPro
 		},
 	}, nil
 }
+
+func (h *Handler) UpdateProfile(ctx context.Context, req *userv1.UpdateProfileRequest) (*userv1.UpdateProfileResponse, error) {
+	in := dto.UpdateProfileInput{}
+	if req.Email != nil {
+		in.Email = req.Email
+	}
+	if req.Username != nil {
+		in.Username = req.Username
+	}
+
+	if err := h.userService.UpdateProfile(ctx, in); err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.UpdateProfileResponse{}, nil
+}
