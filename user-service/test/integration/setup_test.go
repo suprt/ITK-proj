@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	userv1 "github.com/suprt/trading/proto/user/v1"
+	sharedlogger "github.com/suprt/trading/shared/logger"
 	"github.com/suprt/trading/user-service/internal/app"
 	userconfig "github.com/suprt/trading/user-service/internal/infrastructure/config"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -58,7 +59,7 @@ func setupTestServer(t *testing.T) (userv1.UserServiceClient, func()) {
 			RefreshTTL: 168 * time.Hour,
 		},
 		Crypto: userconfig.Crypto{HashCost: 4}, // быстрый bcrypt
-		Level:  "error", Format: "console",
+		Level:  "debug", Format: "console",
 		Auth: userconfig.Auth{
 			Whitelist: map[string]struct{}{
 				"/user.v1.UserService/Register":         {},
@@ -80,7 +81,14 @@ func setupTestServer(t *testing.T) (userv1.UserServiceClient, func()) {
 		fx.NopLogger,
 		app.Module(cfg),
 		fx.Provide(
-			func() *zap.Logger { return zap.NewNop() },
+			func() *zap.Logger {
+				logger, err := sharedlogger.New(sharedlogger.Config{
+					Level:  "debug",
+					Format: "console",
+				})
+				require.NoError(t, err)
+				return logger
+			},
 		),
 		fx.Provide(
 			func(lc fx.Lifecycle, logger *zap.Logger, interceptor grpc.UnaryServerInterceptor) *grpc.Server {
