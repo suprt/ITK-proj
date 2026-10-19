@@ -1,46 +1,24 @@
-# trading
+# Trading
 
-Сейчас для теста работоспособности использовать  
-```text 
-grpcurl -plaintext -d '{"email":"a@b.c","password":"secret123"}' \
-localhost:50051 user.v1.UserService/RegisterUseCase
-```
+Микросервисная биржевая система на Go.
 
-Логин админа
-```text 
-grpcurl -plaintext -d '{"email":"admin@local","password":"admin12345"}' \
-localhost:50051 user.v1.UserService/Login
-```
+## Сервисы
 
-Логин юзера
-```text
-grpcurl -plaintext -d '{"email":"user@local","password":"user12345"}' \
-localhost:50051 user.v1.UserService/Login
-```
+- [`user-service`](./user-service/README.md) — аутентификация, пользователи, роли
+- `spot-service` — рынки (в планах)
+- `order-service` — заказы (в планах)
+- `client` — консольный клиент (в планах)
 
-GetSelfProfile с чьим-либо токеном
-```text
-grpcurl -plaintext -H 'authorization: Bearer <TOKEN>' \
--d '{}' localhost:50051 user.v1.UserService/GetSelfProfile
-```
+## Общая инфраструктура
 
-GetUserByID — админ читает обычного юзера
-```text
-grpcurl -plaintext -H 'authorization: Bearer <ADMIN_ACCESS>' \
--d '{"user_id":"<USER_ID>"}' \
-localhost:50051 user.v1.UserService/GetUserByID
-```
+- **Postgres** — 3 инстанса (по одному на сервис)
+- **Redis** — rate limiting, кэш (в планах)
+- **Prometheus, Jaeger** — мониторинг (в планах)
 
-GetUserByID — обычный юзер пытается читать кого-то → PermissionDenied
-```text
-grpcurl -plaintext -H 'authorization: Bearer <USER_ACCESS>' \
--d '{"user_id":"<ADMIN_ID>"}' \
-localhost:50051 user.v1.UserService/GetUserByID
-```
+## Быстрый старт
 
-GetUserByID без токена → Unauthenticated
-
-```text
-grpcurl -plaintext -d '{"user_id":"<USER_ID>"}' \
-localhost:50051 user.v1.UserService/GetUserByID
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose logs -f <service-name>
 ```
