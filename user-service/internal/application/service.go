@@ -11,6 +11,7 @@ type Service struct {
 	*RemoveRoleUseCase
 	*GetPublicProfileUseCase
 	*UpdateProfileUseCase
+	*ChangePasswordUseCase
 }
 
 func NewService(
@@ -24,6 +25,7 @@ func NewService(
 	removeRole *RemoveRoleUseCase,
 	getPublicProfile *GetPublicProfileUseCase,
 	updateProfile *UpdateProfileUseCase,
+	changePassword *ChangePasswordUseCase,
 ) *Service {
 	return &Service{
 		RegisterUseCase:         register,
@@ -36,5 +38,6 @@ func NewService(
 		RemoveRoleUseCase:       removeRole,
 		GetPublicProfileUseCase: getPublicProfile,
 		UpdateProfileUseCase:    updateProfile,
+		ChangePasswordUseCase:   changePassword,
 	}
 }

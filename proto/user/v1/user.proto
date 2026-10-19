@@ -27,6 +27,7 @@ service UserService {
   rpc RemoveRole(RemoveRoleRequest) returns (RemoveRoleResponse);
   rpc GetPublicProfile(GetPublicProfileRequest) returns (GetPublicProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 }
 
 message User {
@@ -148,3 +149,9 @@ message UpdateProfileRequest{
 
 message UpdateProfileResponse{}
 
+message ChangePasswordRequest{
+  string current_password = 1 [(buf.validate.field).string.min_len = 1];
+  string new_password = 2 [(buf.validate.field).string.min_len = 8];
+}
+
+message ChangePasswordResponse{}

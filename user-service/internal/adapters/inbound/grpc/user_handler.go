@@ -153,3 +153,14 @@ func (h *Handler) UpdateProfile(ctx context.Context, req *userv1.UpdateProfileRe
 	}
 	return &userv1.UpdateProfileResponse{}, nil
 }
+
+func (h *Handler) ChangePassword(ctx context.Context, req *userv1.ChangePasswordRequest) (*userv1.ChangePasswordResponse, error) {
+	err := h.userService.ChangePassword(ctx, dto.ChangePasswordInput{
+		CurrentPassword: req.GetCurrentPassword(),
+		NewPassword:     req.GetNewPassword(),
+	})
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.ChangePasswordResponse{}, nil
+}
