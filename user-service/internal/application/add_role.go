@@ -15,10 +15,11 @@ import (
 
 type AddRoleUseCase struct {
 	users outbound.UserRepository
+	uow   outbound.UnitOfWork
 }
 
-func NewAddRoleUseCase(users outbound.UserRepository) *AddRoleUseCase {
-	return &AddRoleUseCase{users: users}
+func NewAddRoleUseCase(users outbound.UserRepository, uow outbound.UnitOfWork) *AddRoleUseCase {
+	return &AddRoleUseCase{users: users, uow: uow}
 }
 
 func (uc *AddRoleUseCase) AddRole(ctx context.Context, in dto.AddRoleInput) error {
@@ -27,29 +28,31 @@ func (uc *AddRoleUseCase) AddRole(ctx context.Context, in dto.AddRoleInput) erro
 		return er.ErrUnauthenticated
 	}
 
-	caller, err := uc.users.GetByID(ctx, callerID)
-	if err != nil {
-		if errors.Is(err, er.ErrUserNotFound) {
-			return er.ErrUnauthenticated
+	return uc.uow.Do(ctx, func(ctx context.Context) error {
+		caller, err := uc.users.GetByID(ctx, callerID)
+		if err != nil {
+			if errors.Is(err, er.ErrUserNotFound) {
+				return er.ErrUnauthenticated
+			}
+			return err
 		}
-		return err
-	}
-	if !caller.HasRole(domain.RoleAdmin) {
-		return er.ErrForbidden
-	}
+		if !caller.HasRole(domain.RoleAdmin) {
+			return er.ErrForbidden
+		}
 
-	target, err := uc.users.GetByID(ctx, in.UserID)
-	if err != nil {
-		return err
-	}
+		target, err := uc.users.GetByID(ctx, in.UserID)
+		if err != nil {
+			return err
+		}
 
-	if target.HasRole(in.Role) {
-		return nil
-	}
+		if target.HasRole(in.Role) {
+			return nil
+		}
 
-	target.Roles = append(target.Roles, in.Role)
-	target.RolesVersion++
-	target.UpdatedAt = time.Now()
+		target.Roles = append(target.Roles, in.Role)
+		target.RolesVersion++
+		target.UpdatedAt = time.Now()
 
-	return uc.users.Update(ctx, target)
+		return uc.users.Update(ctx, target)
+	})
 }

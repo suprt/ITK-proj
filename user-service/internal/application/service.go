@@ -12,7 +12,7 @@ type Service struct {
 	*GetPublicProfileUseCase
 	*UpdateProfileUseCase
 	*ChangePasswordUseCase
-	*AdminUpdateProfileUserCase
+	*AdminUpdateProfileUseCase
 	*AdminResetPasswordUseCase
 }
 
@@ -28,22 +28,22 @@ func NewService(
 	getPublicProfile *GetPublicProfileUseCase,
 	updateProfile *UpdateProfileUseCase,
 	changePassword *ChangePasswordUseCase,
-	adminUpdateProfile *AdminUpdateProfileUserCase,
+	adminUpdateProfile *AdminUpdateProfileUseCase,
 	adminResetPassword *AdminResetPasswordUseCase,
 ) *Service {
 	return &Service{
-		RegisterUseCase:            register,
-		LoginUseCase:               login,
-		RefreshTokenUseCase:        refreshToken,
-		LogoutUseCase:              logout,
-		GetSelfProfileUseCase:      getSelfProfile,
-		GetUserByIDUseCase:         getUserByID,
-		AddRoleUseCase:             addRole,
-		RemoveRoleUseCase:          removeRole,
-		GetPublicProfileUseCase:    getPublicProfile,
-		UpdateProfileUseCase:       updateProfile,
-		ChangePasswordUseCase:      changePassword,
-		AdminUpdateProfileUserCase: adminUpdateProfile,
-		AdminResetPasswordUseCase:  adminResetPassword,
+		RegisterUseCase:           register,
+		LoginUseCase:              login,
+		RefreshTokenUseCase:       refreshToken,
+		LogoutUseCase:             logout,
+		GetSelfProfileUseCase:     getSelfProfile,
+		GetUserByIDUseCase:        getUserByID,
+		AddRoleUseCase:            addRole,
+		RemoveRoleUseCase:         removeRole,
+		GetPublicProfileUseCase:   getPublicProfile,
+		UpdateProfileUseCase:      updateProfile,
+		ChangePasswordUseCase:     changePassword,
+		AdminUpdateProfileUseCase: adminUpdateProfile,
+		AdminResetPasswordUseCase: adminResetPassword,
 	}
 }

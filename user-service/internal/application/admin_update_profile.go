@@ -12,7 +12,7 @@ import (
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
 )
 
-type AdminUpdateProfileUserCase struct {
+type AdminUpdateProfileUseCase struct {
 	users outbound.UserRepository
 	uow   outbound.UnitOfWork
 }
@@ -20,11 +20,11 @@ type AdminUpdateProfileUserCase struct {
 func NewAdminUpdateProfileUseCase(
 	users outbound.UserRepository,
 	uow outbound.UnitOfWork,
-) *AdminUpdateProfileUserCase {
-	return &AdminUpdateProfileUserCase{users: users, uow: uow}
+) *AdminUpdateProfileUseCase {
+	return &AdminUpdateProfileUseCase{users: users, uow: uow}
 }
 
-func (uc *AdminUpdateProfileUserCase) AdminUpdateProfile(ctx context.Context,
+func (uc *AdminUpdateProfileUseCase) AdminUpdateProfile(ctx context.Context,
 	in dto.AdminUpdateProfileInput) error {
 	callerID, ok := auth.UserIDFromContext(ctx)
 	if !ok {

@@ -62,6 +62,10 @@ func (uc *AdminResetPasswordUseCase) AdminResetPassword(ctx context.Context,
 			return er.ErrForbidden
 		}
 
+		if _, err := uc.users.GetByID(ctx, in.UserID); err != nil {
+			return err
+		}
+
 		hash, err := uc.hasher.Hash(tempPass)
 		if err != nil {
 			return err
