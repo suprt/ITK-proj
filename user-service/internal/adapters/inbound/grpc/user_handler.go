@@ -164,3 +164,18 @@ func (h *Handler) ChangePassword(ctx context.Context, req *userv1.ChangePassword
 	}
 	return &userv1.ChangePasswordResponse{}, nil
 }
+
+func (h *Handler) AdminUpdateProfile(ctx context.Context, req *userv1.AdminUpdateProfileRequest) (*userv1.AdminUpdateProfileResponse, error) {
+	in := dto.AdminUpdateProfileInput{UserID: domain.UserID(req.GetUserId())}
+	if req.Email != nil {
+		in.Email = req.Email
+	}
+	if req.Username != nil {
+		in.Username = req.Username
+	}
+
+	if err := h.userService.AdminUpdateProfile(ctx, in); err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.AdminUpdateProfileResponse{}, nil
+}

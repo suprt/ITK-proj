@@ -19,17 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Register_FullMethodName         = "/user.v1.UserService/Register"
-	UserService_Login_FullMethodName            = "/user.v1.UserService/Login"
-	UserService_RefreshToken_FullMethodName     = "/user.v1.UserService/RefreshToken"
-	UserService_GetSelfProfile_FullMethodName   = "/user.v1.UserService/GetSelfProfile"
-	UserService_GetUserByID_FullMethodName      = "/user.v1.UserService/GetUserByID"
-	UserService_Logout_FullMethodName           = "/user.v1.UserService/Logout"
-	UserService_AddRole_FullMethodName          = "/user.v1.UserService/AddRole"
-	UserService_RemoveRole_FullMethodName       = "/user.v1.UserService/RemoveRole"
-	UserService_GetPublicProfile_FullMethodName = "/user.v1.UserService/GetPublicProfile"
-	UserService_UpdateProfile_FullMethodName    = "/user.v1.UserService/UpdateProfile"
-	UserService_ChangePassword_FullMethodName   = "/user.v1.UserService/ChangePassword"
+	UserService_Register_FullMethodName           = "/user.v1.UserService/Register"
+	UserService_Login_FullMethodName              = "/user.v1.UserService/Login"
+	UserService_RefreshToken_FullMethodName       = "/user.v1.UserService/RefreshToken"
+	UserService_GetSelfProfile_FullMethodName     = "/user.v1.UserService/GetSelfProfile"
+	UserService_GetUserByID_FullMethodName        = "/user.v1.UserService/GetUserByID"
+	UserService_Logout_FullMethodName             = "/user.v1.UserService/Logout"
+	UserService_AddRole_FullMethodName            = "/user.v1.UserService/AddRole"
+	UserService_RemoveRole_FullMethodName         = "/user.v1.UserService/RemoveRole"
+	UserService_GetPublicProfile_FullMethodName   = "/user.v1.UserService/GetPublicProfile"
+	UserService_UpdateProfile_FullMethodName      = "/user.v1.UserService/UpdateProfile"
+	UserService_ChangePassword_FullMethodName     = "/user.v1.UserService/ChangePassword"
+	UserService_AdminUpdateProfile_FullMethodName = "/user.v1.UserService/AdminUpdateProfile"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -47,6 +48,7 @@ type UserServiceClient interface {
 	GetPublicProfile(ctx context.Context, in *GetPublicProfileRequest, opts ...grpc.CallOption) (*GetPublicProfileResponse, error)
 	UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*UpdateProfileResponse, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
+	AdminUpdateProfile(ctx context.Context, in *AdminUpdateProfileRequest, opts ...grpc.CallOption) (*AdminUpdateProfileResponse, error)
 }
 
 type userServiceClient struct {
@@ -167,6 +169,16 @@ func (c *userServiceClient) ChangePassword(ctx context.Context, in *ChangePasswo
 	return out, nil
 }
 
+func (c *userServiceClient) AdminUpdateProfile(ctx context.Context, in *AdminUpdateProfileRequest, opts ...grpc.CallOption) (*AdminUpdateProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminUpdateProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_AdminUpdateProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -182,6 +194,7 @@ type UserServiceServer interface {
 	GetPublicProfile(context.Context, *GetPublicProfileRequest) (*GetPublicProfileResponse, error)
 	UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error)
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
+	AdminUpdateProfile(context.Context, *AdminUpdateProfileRequest) (*AdminUpdateProfileResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -224,6 +237,9 @@ func (UnimplementedUserServiceServer) UpdateProfile(context.Context, *UpdateProf
 }
 func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangePassword not implemented")
+}
+func (UnimplementedUserServiceServer) AdminUpdateProfile(context.Context, *AdminUpdateProfileRequest) (*AdminUpdateProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminUpdateProfile not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -444,6 +460,24 @@ func _UserService_ChangePassword_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_AdminUpdateProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminUpdateProfileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AdminUpdateProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AdminUpdateProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AdminUpdateProfile(ctx, req.(*AdminUpdateProfileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -494,6 +528,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ChangePassword",
 			Handler:    _UserService_ChangePassword_Handler,
+		},
+		{
+			MethodName: "AdminUpdateProfile",
+			Handler:    _UserService_AdminUpdateProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

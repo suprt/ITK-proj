@@ -18,4 +18,5 @@ type UserService interface {
 	GetPublicProfile(ctx context.Context, in dto.GetPublicProfileInput) (*dto.GetPublicProfileOutput, error)
 	UpdateProfile(ctx context.Context, in dto.UpdateProfileInput) error
 	ChangePassword(ctx context.Context, in dto.ChangePasswordInput) error
+	AdminUpdateProfile(ctx context.Context, in dto.AdminUpdateProfileInput) error
 }
