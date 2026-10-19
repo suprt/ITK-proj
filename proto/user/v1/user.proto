@@ -29,6 +29,7 @@ service UserService {
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
   rpc AdminUpdateProfile(AdminUpdateProfileRequest) returns (AdminUpdateProfileResponse);
+  rpc AdminResetPassword(AdminResetPasswordRequest) returns (AdminResetPasswordResponse);
 }
 
 message User {
@@ -168,3 +169,11 @@ message AdminUpdateProfileRequest{
 }
 
 message AdminUpdateProfileResponse {}
+
+message AdminResetPasswordRequest{
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message AdminResetPasswordResponse {
+  string temporary_password = 1;
+}

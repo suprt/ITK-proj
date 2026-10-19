@@ -122,6 +122,7 @@ func Module(cfg userconfig.Config) fx.Option {
 			application.NewUpdateProfileUseCase,
 			application.NewChangePasswordUseCase,
 			application.NewAdminUpdateProfileUseCase,
+			application.NewAdminResetPasswordUseCase,
 		),
 
 		fx.Provide(

@@ -165,7 +165,8 @@ func (h *Handler) ChangePassword(ctx context.Context, req *userv1.ChangePassword
 	return &userv1.ChangePasswordResponse{}, nil
 }
 
-func (h *Handler) AdminUpdateProfile(ctx context.Context, req *userv1.AdminUpdateProfileRequest) (*userv1.AdminUpdateProfileResponse, error) {
+func (h *Handler) AdminUpdateProfile(ctx context.Context,
+	req *userv1.AdminUpdateProfileRequest) (*userv1.AdminUpdateProfileResponse, error) {
 	in := dto.AdminUpdateProfileInput{UserID: domain.UserID(req.GetUserId())}
 	if req.Email != nil {
 		in.Email = req.Email
@@ -178,4 +179,18 @@ func (h *Handler) AdminUpdateProfile(ctx context.Context, req *userv1.AdminUpdat
 		return nil, mapErr(err)
 	}
 	return &userv1.AdminUpdateProfileResponse{}, nil
+}
+
+func (h *Handler) AdminResetPassword(ctx context.Context,
+	req *userv1.AdminResetPasswordRequest) (*userv1.AdminResetPasswordResponse, error) {
+	out, err := h.userService.AdminResetPassword(ctx, dto.AdminResetPasswordInput{
+		UserID: domain.UserID(req.GetUserId()),
+	})
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return &userv1.AdminResetPasswordResponse{
+		TemporaryPassword: out.TemporaryPassword,
+	}, nil
+
 }

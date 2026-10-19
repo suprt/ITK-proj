@@ -13,6 +13,7 @@ type Service struct {
 	*UpdateProfileUseCase
 	*ChangePasswordUseCase
 	*AdminUpdateProfileUserCase
+	*AdminResetPasswordUseCase
 }
 
 func NewService(
@@ -28,6 +29,7 @@ func NewService(
 	updateProfile *UpdateProfileUseCase,
 	changePassword *ChangePasswordUseCase,
 	adminUpdateProfile *AdminUpdateProfileUserCase,
+	adminResetPassword *AdminResetPasswordUseCase,
 ) *Service {
 	return &Service{
 		RegisterUseCase:            register,
@@ -42,5 +44,6 @@ func NewService(
 		UpdateProfileUseCase:       updateProfile,
 		ChangePasswordUseCase:      changePassword,
 		AdminUpdateProfileUserCase: adminUpdateProfile,
+		AdminResetPasswordUseCase:  adminResetPassword,
 	}
 }

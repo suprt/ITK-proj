@@ -31,6 +31,7 @@ const (
 	UserService_UpdateProfile_FullMethodName      = "/user.v1.UserService/UpdateProfile"
 	UserService_ChangePassword_FullMethodName     = "/user.v1.UserService/ChangePassword"
 	UserService_AdminUpdateProfile_FullMethodName = "/user.v1.UserService/AdminUpdateProfile"
+	UserService_AdminResetPassword_FullMethodName = "/user.v1.UserService/AdminResetPassword"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -49,6 +50,7 @@ type UserServiceClient interface {
 	UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*UpdateProfileResponse, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 	AdminUpdateProfile(ctx context.Context, in *AdminUpdateProfileRequest, opts ...grpc.CallOption) (*AdminUpdateProfileResponse, error)
+	AdminResetPassword(ctx context.Context, in *AdminResetPasswordRequest, opts ...grpc.CallOption) (*AdminResetPasswordResponse, error)
 }
 
 type userServiceClient struct {
@@ -179,6 +181,16 @@ func (c *userServiceClient) AdminUpdateProfile(ctx context.Context, in *AdminUpd
 	return out, nil
 }
 
+func (c *userServiceClient) AdminResetPassword(ctx context.Context, in *AdminResetPasswordRequest, opts ...grpc.CallOption) (*AdminResetPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AdminResetPasswordResponse)
+	err := c.cc.Invoke(ctx, UserService_AdminResetPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -195,6 +207,7 @@ type UserServiceServer interface {
 	UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error)
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	AdminUpdateProfile(context.Context, *AdminUpdateProfileRequest) (*AdminUpdateProfileResponse, error)
+	AdminResetPassword(context.Context, *AdminResetPasswordRequest) (*AdminResetPasswordResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -240,6 +253,9 @@ func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePas
 }
 func (UnimplementedUserServiceServer) AdminUpdateProfile(context.Context, *AdminUpdateProfileRequest) (*AdminUpdateProfileResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AdminUpdateProfile not implemented")
+}
+func (UnimplementedUserServiceServer) AdminResetPassword(context.Context, *AdminResetPasswordRequest) (*AdminResetPasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AdminResetPassword not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -478,6 +494,24 @@ func _UserService_AdminUpdateProfile_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_AdminResetPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AdminResetPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AdminResetPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AdminResetPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AdminResetPassword(ctx, req.(*AdminResetPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -532,6 +566,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AdminUpdateProfile",
 			Handler:    _UserService_AdminUpdateProfile_Handler,
+		},
+		{
+			MethodName: "AdminResetPassword",
+			Handler:    _UserService_AdminResetPassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

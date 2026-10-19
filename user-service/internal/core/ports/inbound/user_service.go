@@ -19,4 +19,5 @@ type UserService interface {
 	UpdateProfile(ctx context.Context, in dto.UpdateProfileInput) error
 	ChangePassword(ctx context.Context, in dto.ChangePasswordInput) error
 	AdminUpdateProfile(ctx context.Context, in dto.AdminUpdateProfileInput) error
+	AdminResetPassword(ctx context.Context, in dto.AdminResetPasswordInput) (*dto.AdminResetPasswordOutput, error)
 }
