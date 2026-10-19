@@ -100,9 +100,9 @@ func (l *LoginUseCase) Login(ctx context.Context, in dto.LoginInput) (*dto.Login
 	}
 
 	return &dto.LoginOutput{
-		UserID:         user.ID,
-		AccessToken:    access,
-		RefreshToken:   refresh,
-		AccessExpireIn: int64(l.accessTTL.Seconds()),
+		UserID:          user.ID,
+		AccessToken:     access,
+		RefreshToken:    refresh,
+		AccessExpiresIn: int64(l.accessTTL.Seconds()),
 	}, nil
 }

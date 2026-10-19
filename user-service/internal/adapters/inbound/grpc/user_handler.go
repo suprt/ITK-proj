@@ -45,7 +45,7 @@ func (h *Handler) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.
 		UserId:          string(out.UserID),
 		AccessToken:     out.AccessToken.String(),
 		RefreshToken:    out.RefreshToken.String(),
-		AccessExpiresIn: out.AccessExpireIn,
+		AccessExpiresIn: out.AccessExpiresIn,
 	}, nil
 }
 
@@ -59,7 +59,7 @@ func (h *Handler) RefreshToken(ctx context.Context, req *userv1.RefreshTokenRequ
 	return &userv1.RefreshTokenResponse{
 		AccessToken:     out.AccessToken.String(),
 		RefreshToken:    out.RefreshToken.String(),
-		AccessExpiresIn: out.AccessExpireIn,
+		AccessExpiresIn: out.AccessExpiresIn,
 	}, nil
 }
 

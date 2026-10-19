@@ -8,6 +8,6 @@ type RefreshTokenInput struct {
 
 type RefreshTokenOutput struct {
 	AccessToken    domain.AccessToken
-	RefreshToken   domain.RefreshToken
-	AccessExpireIn int64
+	RefreshToken    domain.RefreshToken
+	AccessExpiresIn int64
 }

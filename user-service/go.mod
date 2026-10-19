@@ -12,6 +12,7 @@ require (
 	github.com/suprt/trading/proto v0.0.0
 	github.com/suprt/trading/shared v0.0.0
 	go.uber.org/fx v1.24.0
+	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.58.0
 	google.golang.org/grpc v1.84.0

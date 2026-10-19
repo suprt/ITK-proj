@@ -10,6 +10,6 @@ type LoginInput struct {
 type LoginOutput struct {
 	UserID         domain.UserID
 	AccessToken    domain.AccessToken
-	RefreshToken   domain.RefreshToken
-	AccessExpireIn int64
+	RefreshToken    domain.RefreshToken
+	AccessExpiresIn int64
 }

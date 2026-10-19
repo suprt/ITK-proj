@@ -95,8 +95,8 @@ func (r *RefreshTokenUseCase) RefreshToken(ctx context.Context, in dto.RefreshTo
 	}
 
 	return &dto.RefreshTokenOutput{
-		AccessToken:    access,
-		RefreshToken:   newRefresh,
-		AccessExpireIn: int64(r.accessTTL.Seconds()),
+		AccessToken:     access,
+		RefreshToken:    newRefresh,
+		AccessExpiresIn: int64(r.accessTTL.Seconds()),
 	}, nil
 }
