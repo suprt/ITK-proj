@@ -25,7 +25,7 @@ go test ./internal/adapters/outbound/postgres/... -v
 Поднимают реальный gRPC-сервер (bufconn) + реальный Postgres. Проверяют полный цикл: клиент → интерсепторы → хендлер → use case → БД.
 
 ```bash
-go test ./test/integration/... -v
+go test ./test/e2e/... -v
 ```
 
 ## Примеры команд
