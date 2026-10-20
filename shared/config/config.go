@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Log struct {
 	Level  string `env:"LOG_LEVEL" envDefault:"info"`
 	Format string `env:"LOG_FORMAT" envDefault:"console"`
@@ -24,4 +26,14 @@ type Redis struct {
 
 type JWTSecret struct {
 	Secret string `env:"JWT_SECRET" envDefault:"dev-secret"`
+}
+
+type RateLimiterRule struct {
+	Limit  int           `yaml:"limit"`
+	Window time.Duration `yaml:"window"`
+}
+
+type RateLimiter struct {
+	Default RateLimiterRule            `yaml:"default"`
+	Methods map[string]RateLimiterRule `yaml:"methods"`
 }

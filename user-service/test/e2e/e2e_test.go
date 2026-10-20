@@ -294,3 +294,80 @@ func TestE2E_AdminFlow(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, codes.Unauthenticated, status.Code(err))
 }
+
+func fakeIPContext(ctx context.Context, ip string) context.Context {
+	return metadata.AppendToOutgoingContext(ctx, "x-forwarded-for", ip)
+}
+
+func TestE2E_RateLimit_Login(t *testing.T) {
+	client, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx := fakeIPContext(context.Background(), "192.0.2.1")
+
+	// Лимит 5 в минуту на Login
+	for i := 0; i < 5; i++ {
+		_, err := client.Login(ctx, &userv1.LoginRequest{
+			Email:    "nonexistent@local",
+			Password: "wrongpass",
+		})
+		require.Error(t, err)
+		assert.Equal(t, codes.Unauthenticated, status.Code(err), "request %d", i)
+	}
+
+	// 6-й — ResourceExhausted
+	_, err := client.Login(ctx, &userv1.LoginRequest{
+		Email:    "nonexistent@local",
+		Password: "wrongpass",
+	})
+	require.Error(t, err)
+	assert.Equal(t, codes.ResourceExhausted, status.Code(err))
+}
+
+func TestE2E_RateLimit_Isolation(t *testing.T) {
+	client, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx := fakeIPContext(context.Background(), "192.0.2.2")
+
+	// Исчерпываем лимит Login (5 запросов)
+	for i := 0; i < 5; i++ {
+		_, _ = client.Login(ctx, &userv1.LoginRequest{
+			Email:    "x@local",
+			Password: "wrongpass",
+		})
+	}
+
+	// Login заблокирован
+	_, err := client.Login(ctx, &userv1.LoginRequest{
+		Email:    "x@local",
+		Password: "wrongpass",
+	})
+	assert.Equal(t, codes.ResourceExhausted, status.Code(err))
+
+	// Register — работает (другой метод, другой счётчик)
+	_, err = client.Register(ctx, &userv1.RegisterRequest{
+		Email:    "new@local",
+		Username: "new_user",
+		Password: "secret123",
+	})
+	assert.Equal(t, codes.OK, status.Code(err))
+}
+
+func TestE2E_RateLimit_DifferentIPs(t *testing.T) {
+	client, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	// IP 1 исчерпывает лимит
+	ctx1 := fakeIPContext(context.Background(), "192.0.2.10")
+	for i := 0; i < 5; i++ {
+		_, _ = client.Login(ctx1, &userv1.LoginRequest{Email: "x@local", Password: "wrongpass"})
+	}
+	_, err := client.Login(ctx1, &userv1.LoginRequest{Email: "x@local", Password: "wrongpass"})
+	assert.Equal(t, codes.ResourceExhausted, status.Code(err))
+
+	// IP 2 — свой счётчик, может логиниться
+	ctx2 := fakeIPContext(context.Background(), "192.0.2.11")
+	_, err = client.Login(ctx2, &userv1.LoginRequest{Email: "x@local", Password: "wrongpass"})
+	assert.Equal(t, codes.Unauthenticated, status.Code(err)) // не ResourceExhausted
+}

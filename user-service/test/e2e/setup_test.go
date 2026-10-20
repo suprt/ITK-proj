@@ -6,12 +6,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	userv1 "github.com/suprt/trading/proto/user/v1"
+	sharedconfig "github.com/suprt/trading/shared/config"
 	sharedlogger "github.com/suprt/trading/shared/logger"
 	"github.com/suprt/trading/user-service/internal/app"
 	userconfig "github.com/suprt/trading/user-service/internal/infrastructure/config"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -36,6 +39,16 @@ func setupTestServer(t *testing.T) (userv1.UserServiceClient, func()) {
 	require.NoError(t, err)
 
 	connStr, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
+	require.NoError(t, err)
+
+	// Redis
+	redisContainer, err := tcredis.Run(ctx, "redis:8-alpine")
+	require.NoError(t, err)
+
+	redisURL, err := redisContainer.ConnectionString(ctx)
+	require.NoError(t, err)
+
+	redisOpts, err := redis.ParseURL(redisURL)
 	require.NoError(t, err)
 
 	// 2. bufconn
@@ -74,6 +87,19 @@ func setupTestServer(t *testing.T) (userv1.UserServiceClient, func()) {
 				{Email: "admin@test", Username: "admin", Password: "admin12345", Roles: []string{"USER", "ADMIN"}},
 			},
 		},
+		Default: sharedconfig.RateLimiterRule{
+			Limit:  100,
+			Window: time.Minute,
+		},
+		Methods: map[string]sharedconfig.RateLimiterRule{
+			"/user.v1.UserService/Login":    {Limit: 5, Window: time.Minute}, // ← 5 для теста
+			"/user.v1.UserService/Register": {Limit: 5, Window: time.Minute},
+		},
+
+		Addr:     redisOpts.Addr,
+		Username: "",
+		Password: "",
+		DB:       0,
 	}
 
 	// 4. fx.App
@@ -125,6 +151,7 @@ func setupTestServer(t *testing.T) (userv1.UserServiceClient, func()) {
 		_ = newApp.Stop(ctx)
 		_ = conn.Close()
 		_ = pgContainer.Terminate(ctx)
+		_ = redisContainer.Terminate(ctx)
 	}
 	return client, cleanup
 }

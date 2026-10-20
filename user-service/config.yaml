@@ -20,3 +20,18 @@ seed:
       username: user
       password: user12345
       roles: [ USER ]
+
+rate_limiter:
+  default:
+    limit: 100
+    window: 1m
+  methods:
+    "/user.v1.UserService/Login":
+      limit: 10
+      window: 1m
+    "/user.v1.UserService/Register":
+      limit: 5
+      window: 1m
+    "/user.v1.UserService/RefreshToken":
+      limit: 20
+      window: 1m

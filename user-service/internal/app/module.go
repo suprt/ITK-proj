@@ -14,6 +14,7 @@ import (
 	sharedinters "github.com/suprt/trading/shared/interceptors"
 	"github.com/suprt/trading/shared/logger"
 	shareredis "github.com/suprt/trading/shared/redis"
+	"github.com/suprt/trading/shared/zaperror"
 	grpchand "github.com/suprt/trading/user-service/internal/adapters/inbound/grpc"
 	userinters "github.com/suprt/trading/user-service/internal/adapters/inbound/interceptors"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/cached"
@@ -22,7 +23,6 @@ import (
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/jwt"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/postgres"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/rediscache"
-	"github.com/suprt/trading/user-service/internal/adapters/outbound/zaperror"
 	"github.com/suprt/trading/user-service/internal/application"
 	"github.com/suprt/trading/user-service/internal/core/ports/inbound"
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
@@ -65,7 +65,7 @@ func Module(cfg userconfig.Config) fx.Option {
 			shareredis.NewClient,
 		),
 
-		// -- Кэш + ErrorReporter--
+		// -- Кэш --
 		fx.Provide(
 			func(cfg userconfig.Config) rediscache.UserCacheConfig {
 				return rediscache.UserCacheConfig{
@@ -76,8 +76,12 @@ func Module(cfg userconfig.Config) fx.Option {
 		),
 		fx.Provide(
 			fx.Annotate(rediscache.NewUserCache, fx.As(new(outbound.UserCache))),
-			fx.Annotate(zaperror.NewReporter, fx.As(new(outbound.ErrorReporter))),
 		),
+
+		//-- Error reporter --
+		fx.Provide(zaperror.NewReporter),
+		fx.Provide(func(r *zaperror.Reporter) outbound.ErrorReporter { return r }),
+		fx.Provide(func(r *zaperror.Reporter) sharedinters.ErrorReporter { return r }),
 
 		// -- Миграции --
 		fx.Invoke(func(lc fx.Lifecycle, cfg userconfig.Config) {
@@ -130,6 +134,23 @@ func Module(cfg userconfig.Config) fx.Option {
 					HashCost: cfg.Crypto.HashCost,
 				}
 			},
+
+			func(cfg userconfig.Config) sharedinters.RateLimiterConfig {
+				methods := make(map[string]sharedinters.RateLimiterRule, len(cfg.RateLimiter.Methods))
+				for k, v := range cfg.RateLimiter.Methods {
+					methods[k] = sharedinters.RateLimiterRule{
+						Limit:  v.Limit,
+						Window: v.Window,
+					}
+				}
+				return sharedinters.RateLimiterConfig{
+					Default: sharedinters.RateLimiterRule{
+						Limit:  cfg.RateLimiter.Default.Limit,
+						Window: cfg.RateLimiter.Default.Window,
+					},
+					Methods: methods,
+				}
+			},
 		),
 
 		// -- Interceptors --
@@ -138,11 +159,15 @@ func Module(cfg userconfig.Config) fx.Option {
 				logger *zap.Logger,
 				tokens outbound.TokenIssuer,
 				cfg userconfig.Config,
+				redisClient *redis.Client,
+				rlCfg sharedinters.RateLimiterConfig,
+				errReporter sharedinters.ErrorReporter,
 			) grpc.UnaryServerInterceptor {
 				return sharedinters.Chain(
 					sharedinters.PanicRecovery(logger),
 					sharedinters.XRequestID(),
 					sharedinters.Logger(logger),
+					sharedinters.UnaryRateLimiter(redisClient, rlCfg, errReporter),
 					userinters.UnaryAuth(tokens, cfg.Auth.Whitelist),
 					userinters.UnaryValidation(),
 				)
