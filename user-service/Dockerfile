@@ -7,7 +7,7 @@ COPY shared/go.mod shared/go.sum ./shared/
 COPY user-service/go.mod user-service/go.sum ./user-service/
 
 ENV GOWORK=off
-RUN cd user-service &&  go mod download
+RUN cd user-service &&  go mod download && go mod tidy
 
 COPY proto/ ./proto/
 COPY shared/ ./shared/

@@ -4,19 +4,25 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	userv1 "github.com/suprt/trading/proto/user/v1"
 	"github.com/suprt/trading/shared/bootstrap"
 	"github.com/suprt/trading/shared/db"
 	sharedinters "github.com/suprt/trading/shared/interceptors"
 	"github.com/suprt/trading/shared/logger"
+	shareredis "github.com/suprt/trading/shared/redis"
 	grpchand "github.com/suprt/trading/user-service/internal/adapters/inbound/grpc"
 	userinters "github.com/suprt/trading/user-service/internal/adapters/inbound/interceptors"
+	"github.com/suprt/trading/user-service/internal/adapters/outbound/cached"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/crypto"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/idgen"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/jwt"
 	"github.com/suprt/trading/user-service/internal/adapters/outbound/postgres"
+	"github.com/suprt/trading/user-service/internal/adapters/outbound/rediscache"
+	"github.com/suprt/trading/user-service/internal/adapters/outbound/zaperror"
 	"github.com/suprt/trading/user-service/internal/application"
 	"github.com/suprt/trading/user-service/internal/core/ports/inbound"
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
@@ -33,7 +39,7 @@ func Module(cfg userconfig.Config) fx.Option {
 		fx.Provide(func() userconfig.Config {
 			return cfg
 		}),
-
+		// -- Postgres --
 		fx.Provide(
 			func(cfg userconfig.Config) db.Config {
 				return db.Config{
@@ -45,6 +51,35 @@ func Module(cfg userconfig.Config) fx.Option {
 			},
 			db.NewPostgres,
 		),
+
+		// -- Redis --
+		fx.Provide(
+			func(cfg userconfig.Config) shareredis.Config {
+				return shareredis.Config{
+					Addr:     cfg.Redis.Addr,
+					Username: cfg.Redis.Username,
+					Password: cfg.Redis.Password,
+					DB:       cfg.Redis.DB,
+				}
+			},
+			shareredis.NewClient,
+		),
+
+		// -- Кэш + ErrorReporter--
+		fx.Provide(
+			func(cfg userconfig.Config) rediscache.UserCacheConfig {
+				return rediscache.UserCacheConfig{
+					UserTTL:         cfg.Cache.UserTTL,
+					UserNotFoundTTL: cfg.Cache.UserNotFoundTTL,
+				}
+			},
+		),
+		fx.Provide(
+			fx.Annotate(rediscache.NewUserCache, fx.As(new(outbound.UserCache))),
+			fx.Annotate(zaperror.NewReporter, fx.As(new(outbound.ErrorReporter))),
+		),
+
+		// -- Миграции --
 		fx.Invoke(func(lc fx.Lifecycle, cfg userconfig.Config) {
 			lc.Append(fx.Hook{
 				OnStart: func(ctx context.Context) error {
@@ -52,6 +87,22 @@ func Module(cfg userconfig.Config) fx.Option {
 				},
 			})
 		}),
+
+		// --Redis ping--
+		fx.Invoke(func(lc fx.Lifecycle, client *redis.Client, logger *zap.Logger) {
+			lc.Append(fx.Hook{
+				OnStart: func(ctx context.Context) error {
+					pingCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+					defer cancel()
+					if err := client.Ping(pingCtx).Err(); err != nil {
+						logger.Warn("redis ping failed, cache disabled", zap.Error(err))
+					}
+					return nil
+				},
+			})
+		}),
+
+		// -- Config --
 		fx.Provide(
 			func(cfg userconfig.Config) jwt.Config {
 				return jwt.Config{
@@ -81,6 +132,7 @@ func Module(cfg userconfig.Config) fx.Option {
 			},
 		),
 
+		// -- Interceptors --
 		fx.Provide(
 			func(
 				logger *zap.Logger,
@@ -97,8 +149,19 @@ func Module(cfg userconfig.Config) fx.Option {
 			},
 		),
 
+		//-- Outbound adapters --
 		fx.Provide(
-			fx.Annotate(postgres.NewUserRepo, fx.As(new(outbound.UserRepository))),
+			postgres.NewUserRepo,
+			fx.Annotate(
+				func(repo *postgres.UserRepo,
+					cache outbound.UserCache,
+					reporter outbound.ErrorReporter,
+				) outbound.UserRepository {
+					return cached.NewUserRepo(repo, cache, reporter)
+				},
+			),
+
+			//fx.Annotate(postgres.NewUserRepo, fx.As(new(outbound.UserRepository))),
 			fx.Annotate(postgres.NewCredentialsRepo, fx.As(new(outbound.CredentialsRepository))),
 			fx.Annotate(postgres.NewSessionRepo, fx.As(new(outbound.SessionRepository))),
 			fx.Annotate(crypto.NewBcryptHasher, fx.As(new(outbound.PasswordHasher))),

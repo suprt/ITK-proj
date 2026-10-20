@@ -15,6 +15,13 @@ type Metrics struct {
 	Addr    string `env:"METRICS_ADDR" envDefault:":9090"`
 }
 
+type Redis struct {
+	Addr     string `env:"REDIS_ADDR" envDefault:"localhost:6379"`
+	Username string `env:"REDIS_USER" envDefault:"redis_user"`
+	Password string `env:"REDIS_PASSWORD"`
+	DB       int    `env:"REDIS_DB" envDefault:"0"`
+}
+
 type JWTSecret struct {
 	Secret string `env:"JWT_SECRET" envDefault:"dev-secret"`
 }

@@ -32,14 +32,19 @@ type Seed struct {
 type Config struct {
 	sharedconfig.Log
 	sharedconfig.JWTSecret
+	sharedconfig.Redis
 	GRPC     GRPC
 	Postgres Postgres
 	JWT      JWT
 	Crypto   Crypto
+	Cache    Cache
 	Seed     Seed `yaml:"seed"`
 	Auth     Auth `yaml:"auth"`
 }
-
+type Cache struct {
+	UserTTL         time.Duration `env:"CACHE_USER_TTL" envDefault:"2h"`
+	UserNotFoundTTL time.Duration `env:"CACHE_USER_NOT_FOUND_TTL" envDefault:"30s"`
+}
 type Auth struct {
 	Whitelist map[string]struct{}
 }

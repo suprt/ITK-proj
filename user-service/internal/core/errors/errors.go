@@ -1,6 +1,8 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrUserNotFound       = errors.New("user not found")
@@ -14,4 +16,5 @@ var (
 	ErrUnauthenticated    = errors.New("unauthenticated")
 	ErrInvalidRole        = errors.New("invalid role")
 	ErrUsernameTaken      = errors.New("username already taken")
+	ErrCacheMiss          = errors.New("cache miss")
 )

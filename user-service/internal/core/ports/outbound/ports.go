@@ -43,3 +43,17 @@ type IDGenerator interface {
 type UnitOfWork interface {
 	Do(ctx context.Context, fn func(ctx context.Context) error) error
 }
+
+type UserCache interface {
+	Get(ctx context.Context, id domain.UserID) (*domain.User, error)
+	Set(ctx context.Context, u *domain.User) error
+	SetNotFound(ctx context.Context, id domain.UserID) error
+	Delete(ctx context.Context, id domain.UserID) error
+	DeleteNotFound(ctx context.Context, id domain.UserID) error
+}
+
+// ErrorReporter используется для логирования не критических ошибок,
+// которые следует отслеживать, например, ошибка инвалидации кэша и т.п.
+type ErrorReporter interface {
+	Report(ctx context.Context, err error, attrs map[string]string)
+}
