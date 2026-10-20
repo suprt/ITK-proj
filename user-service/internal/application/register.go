@@ -3,12 +3,14 @@ package application
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/suprt/trading/user-service/internal/core/domain"
 	"github.com/suprt/trading/user-service/internal/core/dto"
 	er "github.com/suprt/trading/user-service/internal/core/errors"
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
+	"google.golang.org/grpc/metadata"
 )
 
 type RegisterUseCase struct {
@@ -17,6 +19,12 @@ type RegisterUseCase struct {
 	hasher      outbound.PasswordHasher
 	ids         outbound.IDGenerator
 	uow         outbound.UnitOfWork
+	idemStore   outbound.IdempotencyStore
+	idemTTL     time.Duration
+	reporter    outbound.ErrorReporter
+}
+type RegisterConfig struct {
+	IdempotencyTTL time.Duration
 }
 
 func NewRegisterUseCase(
@@ -25,6 +33,9 @@ func NewRegisterUseCase(
 	hasher outbound.PasswordHasher,
 	ids outbound.IDGenerator,
 	uow outbound.UnitOfWork,
+	idemStore outbound.IdempotencyStore,
+	reporter outbound.ErrorReporter,
+	cfg RegisterConfig,
 ) *RegisterUseCase {
 	return &RegisterUseCase{
 		users:       users,
@@ -32,10 +43,60 @@ func NewRegisterUseCase(
 		hasher:      hasher,
 		ids:         ids,
 		uow:         uow,
+		idemStore:   idemStore,
+		reporter:    reporter,
+		idemTTL:     cfg.IdempotencyTTL,
 	}
 }
 
 func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*dto.RegisterOutput, error) {
+
+	var idemKey string
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if vals := md.Get("idempotency-key"); len(vals) > 0 {
+			idemKey = vals[0]
+		}
+	}
+	payloadHash := sha256HEX(fmt.Sprintf("%s:%s:%s", in.Email, in.Username, in.Password))
+
+	if idemKey != "" {
+		rec, err := r.idemStore.Get(ctx, idemKey)
+		if err != nil {
+			r.reporter.Report(ctx, err, map[string]string{
+				"op":  "idempotency_get",
+				"key": idemKey,
+			})
+		}
+
+		if rec != nil {
+			if rec.PayloadHash != payloadHash {
+				return nil, er.ErrIdempotencyConflict
+			}
+
+			return &dto.RegisterOutput{UserID: domain.UserID(rec.UserID)}, nil
+		}
+	}
+
+	out, err := r.doRegister(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+
+	if idemKey != "" {
+		if err := r.idemStore.Set(ctx, idemKey, &domain.IdempotencyRecord{
+			PayloadHash: payloadHash,
+			UserID:      string(out.UserID),
+		}, r.idemTTL); err != nil {
+			r.reporter.Report(ctx, err, map[string]string{
+				"op":  "idempotency_set",
+				"key": idemKey,
+			})
+		}
+	}
+	return out, nil
+}
+
+func (r *RegisterUseCase) doRegister(ctx context.Context, in dto.RegisterInput) (*dto.RegisterOutput, error) {
 	_, err := r.users.GetByEmail(ctx, in.Email)
 	if err == nil {
 		return nil, er.ErrEmailTaken

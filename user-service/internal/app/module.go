@@ -149,6 +149,15 @@ func Module(cfg userconfig.Config) fx.Option {
 			},
 		),
 
+		//-- IdempotencyStore --
+		fx.Provide(
+			func(cfg userconfig.Config) application.RegisterConfig {
+				return application.RegisterConfig{
+					IdempotencyTTL: cfg.Idempotency.TTL,
+				}
+			},
+		),
+
 		//-- Outbound adapters --
 		fx.Provide(
 			postgres.NewUserRepo,
@@ -168,6 +177,7 @@ func Module(cfg userconfig.Config) fx.Option {
 			fx.Annotate(idgen.NewUUIDGen, fx.As(new(outbound.IDGenerator))),
 			fx.Annotate(jwt.NewJWTIssuer, fx.As(new(outbound.TokenIssuer))),
 			fx.Annotate(postgres.NewUoW, fx.As(new(outbound.UnitOfWork))),
+			fx.Annotate(rediscache.NewIdempotencyStore, fx.As(new(outbound.IdempotencyStore))),
 		),
 
 		//---- use cases ----

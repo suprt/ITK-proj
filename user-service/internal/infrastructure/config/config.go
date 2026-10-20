@@ -33,13 +33,18 @@ type Config struct {
 	sharedconfig.Log
 	sharedconfig.JWTSecret
 	sharedconfig.Redis
-	GRPC     GRPC
-	Postgres Postgres
-	JWT      JWT
-	Crypto   Crypto
-	Cache    Cache
-	Seed     Seed `yaml:"seed"`
-	Auth     Auth `yaml:"auth"`
+	GRPC        GRPC
+	Postgres    Postgres
+	JWT         JWT
+	Crypto      Crypto
+	Cache       Cache
+	Idempotency Idempotency
+	Seed        Seed `yaml:"seed"`
+	Auth        Auth `yaml:"auth"`
+}
+
+type Idempotency struct {
+	TTL time.Duration `env:"Idempotency_TTL" envDefault:"1h"`
 }
 type Cache struct {
 	UserTTL         time.Duration `env:"CACHE_USER_TTL" envDefault:"2h"`

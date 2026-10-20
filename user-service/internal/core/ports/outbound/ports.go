@@ -2,6 +2,7 @@ package outbound
 
 import (
 	"context"
+	"time"
 
 	"github.com/suprt/trading/user-service/internal/core/domain"
 )
@@ -56,4 +57,9 @@ type UserCache interface {
 // которые следует отслеживать, например, ошибка инвалидации кэша и т.п.
 type ErrorReporter interface {
 	Report(ctx context.Context, err error, attrs map[string]string)
+}
+
+type IdempotencyStore interface {
+	Get(ctx context.Context, key string) (*domain.IdempotencyRecord, error)
+	Set(ctx context.Context, key string, rec *domain.IdempotencyRecord, ttl time.Duration) error
 }
