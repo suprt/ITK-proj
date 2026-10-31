@@ -45,6 +45,6 @@ func (uc *UpdateProfileUseCase) UpdateProfile(ctx context.Context, in dto.Update
 		}
 		user.UpdatedAt = time.Now()
 
-		return uc.users.Update(ctx, user)
+		return uc.users.UpdateProfile(ctx, user)
 	})
 }

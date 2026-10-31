@@ -50,16 +50,14 @@ func (r *UserRepo) Create(ctx context.Context, u *domain.User) (err error) {
 	}
 	return nil
 }
-
-func (r *UserRepo) Update(ctx context.Context, u *domain.User) (err error) {
+func (r *UserRepo) UpdateProfile(ctx context.Context, u *domain.User) (err error) {
 	db := dbFromContext(ctx, r.pool)
 
 	res, err := db.Exec(ctx, `
 		UPDATE users 
-		SET email = $1, username = $2, roles_version = $3, updated_at = $4
-		WHERE id = $5`,
-		u.Email, u.Username, u.RolesVersion, u.UpdatedAt, u.ID)
-
+		SET email = $1, username = $2, updated_at = $3
+		WHERE id = $4`,
+		u.Email, u.Username, u.UpdatedAt, u.ID)
 	if err != nil {
 		if uv, ok := shareddb.AsUniqueViolation(err); ok {
 			switch uv.Constraint {
@@ -75,7 +73,24 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) (err error) {
 	if n == 0 {
 		return er.ErrUserNotFound
 	}
+	return nil
+}
+func (r *UserRepo) UpdateRoles(ctx context.Context, u *domain.User) (err error) {
+	db := dbFromContext(ctx, r.pool)
 
+	res, err := db.Exec(ctx, `
+		UPDATE users 
+		SET roles_version = $1, updated_at = $2
+		WHERE id = $3`,
+		u.RolesVersion, u.UpdatedAt, u.ID)
+	if err != nil {
+		return err
+	}
+	n := res.RowsAffected()
+	if n == 0 {
+		return er.ErrUserNotFound
+	}
+	//TODO: разделить update
 	_, err = db.Exec(ctx, `DELETE FROM user_roles WHERE user_id = $1`, u.ID)
 	if err != nil {
 		return err

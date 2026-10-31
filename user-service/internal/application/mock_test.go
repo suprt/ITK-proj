@@ -36,18 +36,24 @@ func (m *mockUserRepo) Create(_ context.Context, u *domain.User) error {
 	return nil
 }
 
-func (m *mockUserRepo) Update(_ context.Context, u *domain.User) error {
+func (m *mockUserRepo) UpdateProfile(_ context.Context, u *domain.User) error {
 	if _, exists := m.users[u.ID]; !exists {
 		return er.ErrUserNotFound
-	}
-	if exiID, taken := m.emails[u.Email]; taken && exiID != u.ID {
-		return er.ErrEmailTaken
 	}
 	m.users[u.ID] = u
 	m.emails[u.Email] = u.ID
 	return nil
 }
 
+func (m *mockUserRepo) UpdateRoles(_ context.Context, u *domain.User) error {
+	if _, exists := m.users[u.ID]; !exists {
+		return er.ErrUserNotFound
+	}
+	m.users[u.ID].Roles = u.Roles
+	m.users[u.ID].RolesVersion = u.RolesVersion
+	m.users[u.ID].UpdatedAt = u.UpdatedAt
+	return nil
+}
 func (m *mockUserRepo) GetByID(_ context.Context, id domain.UserID) (*domain.User, error) {
 	u, exists := m.users[id]
 	if !exists {

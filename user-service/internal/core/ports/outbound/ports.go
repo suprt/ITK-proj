@@ -9,7 +9,8 @@ import (
 
 type UserRepository interface {
 	Create(ctx context.Context, u *domain.User) error
-	Update(ctx context.Context, u *domain.User) error
+	UpdateProfile(ctx context.Context, u *domain.User) error
+	UpdateRoles(ctx context.Context, u *domain.User) error
 	GetByID(ctx context.Context, id domain.UserID) (*domain.User, error)
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
 }

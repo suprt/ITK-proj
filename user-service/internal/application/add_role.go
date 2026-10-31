@@ -53,6 +53,6 @@ func (uc *AddRoleUseCase) AddRole(ctx context.Context, in dto.AddRoleInput) erro
 		target.RolesVersion++
 		target.UpdatedAt = time.Now()
 
-		return uc.users.Update(ctx, target)
+		return uc.users.UpdateRoles(ctx, target)
 	})
 }

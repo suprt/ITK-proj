@@ -56,7 +56,7 @@ func (uc *AdminUpdateProfileUseCase) AdminUpdateProfile(ctx context.Context,
 		}
 		target.UpdatedAt = time.Now()
 
-		return uc.users.Update(ctx, target)
+		return uc.users.UpdateProfile(ctx, target)
 	})
 
 }

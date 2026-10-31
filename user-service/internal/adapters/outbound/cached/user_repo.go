@@ -34,8 +34,8 @@ func (r *UserRepo) Create(ctx context.Context, u *domain.User) error {
 	return nil
 }
 
-func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
-	if err := r.next.Update(ctx, u); err != nil {
+func (r *UserRepo) UpdateProfile(ctx context.Context, u *domain.User) error {
+	if err := r.next.UpdateProfile(ctx, u); err != nil {
 		return err
 	}
 	if err := r.cache.Delete(ctx, u.ID); err != nil {
@@ -43,7 +43,15 @@ func (r *UserRepo) Update(ctx context.Context, u *domain.User) error {
 	}
 	return nil
 }
-
+func (r *UserRepo) UpdateRoles(ctx context.Context, u *domain.User) error {
+	if err := r.next.UpdateRoles(ctx, u); err != nil {
+		return err
+	}
+	if err := r.cache.Delete(ctx, u.ID); err != nil {
+		r.reporter.Report(ctx, err, map[string]string{"op": "cache_delete", "user_id": string(u.ID)})
+	}
+	return nil
+}
 func (r *UserRepo) GetByID(ctx context.Context, id domain.UserID) (*domain.User, error) {
 	u, err := r.cache.Get(ctx, id)
 	if err == nil {

@@ -71,7 +71,7 @@ func (uc *RemoveRoleUseCase) RemoveRole(ctx context.Context, in dto.RemoveRoleIn
 		target.RolesVersion++
 		target.UpdatedAt = time.Now()
 
-		if err := uc.users.Update(ctx, target); err != nil {
+		if err := uc.users.UpdateRoles(ctx, target); err != nil {
 			return err
 		}
 
