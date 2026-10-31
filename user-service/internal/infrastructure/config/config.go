@@ -64,6 +64,7 @@ type Postgres struct {
 	MaxConns        int32         `env:"POSTGRES_MAX_CONNS" envDefault:"25"`
 	MinConns        int32         `env:"POSTGRES_MIN_CONNS" envDefault:"5"`
 	MaxConnLifetime time.Duration `env:"POSTGRES_MAX_CONN_LIFETIME" envDefault:"5m"`
+	MaxConnIdleTime time.Duration `env:"POSTGRES_MAX_CONN_IDLE_TIME" envDefault:"1m"`
 }
 
 func Load(yamlPath string) (*Config, error) {

@@ -47,6 +47,7 @@ func Module(cfg userconfig.Config) fx.Option {
 					MaxConns:        cfg.Postgres.MaxConns,
 					MinConns:        cfg.Postgres.MinConns,
 					MaxConnLifetime: cfg.Postgres.MaxConnLifetime,
+					MaxConnIdleTime: cfg.Postgres.MaxConnIdleTime,
 				}
 			},
 			db.NewPostgres,

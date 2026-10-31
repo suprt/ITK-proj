@@ -12,6 +12,7 @@ type Config struct {
 	MaxConns        int32
 	MinConns        int32
 	MaxConnLifetime time.Duration
+	MaxConnIdleTime time.Duration
 }
 
 func NewPostgres(cfg Config) (*pgxpool.Pool, error) {
@@ -24,7 +25,7 @@ func NewPostgres(cfg Config) (*pgxpool.Pool, error) {
 	poolCfg.MaxConns = cfg.MaxConns
 	poolCfg.MinConns = cfg.MinConns
 	poolCfg.MaxConnLifetime = cfg.MaxConnLifetime
-	//TODO:idle time
+	poolCfg.MaxConnIdleTime = cfg.MaxConnIdleTime
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
