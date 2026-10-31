@@ -29,6 +29,7 @@ func XRequestID() grpc.UnaryServerInterceptor {
 		ctx = context.WithValue(ctx, RequestIDKey, reqID)
 		ctx = metadata.AppendToOutgoingContext(ctx, "x-request-id", reqID)
 		//TODO:header
+		_ = grpc.SetHeader(ctx, metadata.Pairs("x-request-id", reqID))
 		return handler(ctx, req)
 	}
 }
