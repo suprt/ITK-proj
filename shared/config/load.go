@@ -7,6 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TODO: сначала yaml -> env -> если нет значений падаем
 func Load[T any](yamlPath string) (*T, error) {
 	var cfg T
 

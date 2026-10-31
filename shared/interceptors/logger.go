@@ -6,6 +6,7 @@ import (
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
@@ -30,7 +31,13 @@ func Logger(logger *zap.Logger) grpc.UnaryServerInterceptor {
 			fields = append(fields, zap.String("status_code", stat.Code().String()),
 				zap.String("status_message", stat.Message()),
 			)
-			logger.Warn("request failed", fields...)
+			switch stat.Code() {
+			case codes.InvalidArgument, codes.NotFound, codes.AlreadyExists, codes.PermissionDenied, codes.Unauthenticated,
+				codes.FailedPrecondition, codes.ResourceExhausted, codes.OutOfRange:
+				logger.Debug("request failed (client)", fields...)
+			default:
+				logger.Warn("request failed", fields...)
+			}
 			return resp, err
 		}
 		logger.Debug("request done", fields...)

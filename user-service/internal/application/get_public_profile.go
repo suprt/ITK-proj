@@ -23,8 +23,8 @@ func (uc *GetPublicProfileUseCase) GetPublicProfile(ctx context.Context,
 	}
 
 	return &dto.GetPublicProfileOutput{
-		UserID:   user.ID,
-		Username: user.Username,
-		CreateAt: user.CreatedAt,
+		UserID:    user.ID,
+		Username:  user.Username,
+		CreatedAt: user.CreatedAt,
 	}, nil
 }

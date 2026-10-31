@@ -11,7 +11,7 @@ type GetPublicProfileInput struct {
 }
 
 type GetPublicProfileOutput struct {
-	UserID domain.UserID
-	Username string
-	CreateAt time.Time
+	UserID    domain.UserID
+	Username  string
+	CreatedAt time.Time
 }

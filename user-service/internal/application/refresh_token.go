@@ -60,10 +60,7 @@ func (r *RefreshTokenUseCase) RefreshToken(ctx context.Context, in dto.RefreshTo
 
 		user, err = r.users.GetByID(ctx, session.UserID)
 		if err != nil {
-			errD := r.sessions.Delete(ctx, in.RefreshToken)
-			if errD != nil {
-				return errD
-			}
+			_ = r.sessions.Delete(ctx, in.RefreshToken)
 			return er.ErrInvalidToken
 		}
 
