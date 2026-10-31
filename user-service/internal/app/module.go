@@ -102,6 +102,23 @@ func Module(cfg userconfig.Config) fx.Option {
 					if err := client.Ping(pingCtx).Err(); err != nil {
 						logger.Warn("redis ping failed, cache disabled", zap.Error(err))
 					}
+					go func() {
+						ticker := time.NewTicker(30 * time.Second)
+						defer ticker.Stop()
+						for {
+							select {
+							case <-ctx.Done():
+								return
+							case <-ticker.C:
+								pingCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+								err := client.Ping(pingCtx).Err()
+								cancel()
+								if err != nil {
+									logger.Warn("redis ping failed", zap.Error(err))
+								}
+							}
+						}
+					}()
 					return nil
 				},
 			})
@@ -254,8 +271,10 @@ func Start() {
 		log.Fatal(err)
 	}
 	zapLogger, err := logger.New(logger.Config{
-		Level:  cfg.Log.Level,
-		Format: cfg.Log.Format,
+		Level:              cfg.Log.Level,
+		Format:             cfg.Log.Format,
+		SamplingInitial:    cfg.Log.SamplingInitial,
+		SamplingThereafter: cfg.Log.SamplingThereafter,
 	})
 	if err != nil {
 		log.Fatal(err)

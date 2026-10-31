@@ -3,8 +3,10 @@ package config
 import "time"
 
 type Log struct {
-	Level  string `env:"LOG_LEVEL" envDefault:"info"`
-	Format string `env:"LOG_FORMAT" envDefault:"console"`
+	Level              string `env:"LOG_LEVEL" envDefault:"info"`
+	Format             string `env:"LOG_FORMAT" envDefault:"console"`
+	SamplingInitial    int    `env:"LOG_SAMPLING_INITIAL" envDefault:"100"`
+	SamplingThereafter int    `env:"LOG_SAMPLING_THEREAFTER" envDefault:"100"`
 }
 
 type Tracing struct {
