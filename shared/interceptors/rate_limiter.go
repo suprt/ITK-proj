@@ -78,6 +78,7 @@ func UnaryRateLimiter(client *redis.Client, cfg RateLimiterConfig, reporter Erro
 	}
 }
 
+// TODO: relay ip -> last x-forwarder-for -> p.Addr
 func clientIP(ctx context.Context) (string, error) {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		if vals := md.Get("x-forwarded-for"); len(vals) > 0 {

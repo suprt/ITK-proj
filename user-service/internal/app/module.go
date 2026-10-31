@@ -162,15 +162,15 @@ func Module(cfg userconfig.Config) fx.Option {
 				redisClient *redis.Client,
 				rlCfg sharedinters.RateLimiterConfig,
 				errReporter sharedinters.ErrorReporter,
-			) grpc.UnaryServerInterceptor {
-				return sharedinters.Chain(
+			) []grpc.UnaryServerInterceptor {
+				return []grpc.UnaryServerInterceptor{
 					sharedinters.PanicRecovery(logger),
 					sharedinters.XRequestID(),
 					sharedinters.Logger(logger),
 					sharedinters.UnaryRateLimiter(redisClient, rlCfg, errReporter),
 					userinters.UnaryAuth(tokens, cfg.Auth.Whitelist),
 					userinters.UnaryValidation(),
-				)
+				}
 			},
 		),
 

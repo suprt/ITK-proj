@@ -16,7 +16,7 @@ type Params struct {
 	Shutdowner   fx.Shutdowner
 	Addr         Addr
 	Logger       *zap.Logger
-	Interceptors grpc.UnaryServerInterceptor
+	Interceptors []grpc.UnaryServerInterceptor
 }
 type Addr string
 type Result struct {
@@ -26,7 +26,7 @@ type Result struct {
 
 func New(p Params) Result {
 	srv := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(p.Interceptors))
+		grpc.ChainUnaryInterceptor(p.Interceptors...))
 
 	p.LC.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
