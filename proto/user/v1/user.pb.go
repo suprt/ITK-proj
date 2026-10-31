@@ -1158,7 +1158,7 @@ func (*UpdateProfileResponse) Descriptor() ([]byte, []int) {
 type ChangePasswordRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	CurrentPassword string                 `protobuf:"bytes,1,opt,name=current_password,json=currentPassword,proto3" json:"current_password,omitempty"`
-	NewPassword     string                 `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	NewPassword     string                 `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"` //TODO: password max len 72
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1383,6 +1383,7 @@ func (x *AdminResetPasswordRequest) GetUserId() string {
 	return ""
 }
 
+// TODO: bool как прошла операция + дока
 type AdminResetPasswordResponse struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	TemporaryPassword string                 `protobuf:"bytes,1,opt,name=temporary_password,json=temporaryPassword,proto3" json:"temporary_password,omitempty"`
@@ -1447,15 +1448,15 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\busername\x18\x02 \x01(\tR\busername\x129\n" +
 	"\n" +
 	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x8f\x01\n" +
-	"\x0fRegisterRequest\x12\x1f\n" +
-	"\x05email\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01`\x01R\x05email\x12#\n" +
-	"\bpassword\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\bR\bpassword\x126\n" +
+	"\x0fRegisterRequest\x12\x1d\n" +
+	"\x05email\x18\x01 \x01(\tB\a\xbaH\x04r\x02`\x01R\x05email\x12%\n" +
+	"\bpassword\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18HR\bpassword\x126\n" +
 	"\busername\x18\x03 \x01(\tB\x1a\xbaH\x17r\x15\x10\x03\x18\x1e2\x0f^[a-zA-Z0-9_]+$R\busername\"+\n" +
 	"\x10RegisterResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"T\n" +
-	"\fLoginRequest\x12\x1f\n" +
-	"\x05email\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01`\x01R\x05email\x12#\n" +
-	"\bpassword\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\bR\bpassword\"\x9c\x01\n" +
+	"\fLoginRequest\x12\x1d\n" +
+	"\x05email\x18\x01 \x01(\tB\a\xbaH\x04r\x02`\x01R\x05email\x12%\n" +
+	"\bpassword\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18HR\bpassword\"\x9c\x01\n" +
 	"\rLoginResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12#\n" +
@@ -1496,10 +1497,10 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\busername\x18\x02 \x01(\tB\x1a\xbaH\x17r\x15\x10\x03\x18\x1e2\x0f^[a-zA-Z0-9_]+$H\x01R\busername\x88\x01\x01B\b\n" +
 	"\x06_emailB\v\n" +
 	"\t_username\"\x17\n" +
-	"\x15UpdateProfileResponse\"w\n" +
-	"\x15ChangePasswordRequest\x122\n" +
-	"\x10current_password\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\x0fcurrentPassword\x12*\n" +
-	"\fnew_password\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x10\bR\vnewPassword\"\x18\n" +
+	"\x15UpdateProfileResponse\"{\n" +
+	"\x15ChangePasswordRequest\x124\n" +
+	"\x10current_password\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18HR\x0fcurrentPassword\x12,\n" +
+	"\fnew_password\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\b\x18HR\vnewPassword\"\x18\n" +
 	"\x16ChangePasswordResponse\"\xb6\x01\n" +
 	"\x19AdminUpdateProfileRequest\x12!\n" +
 	"\auser_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06userId\x12\"\n" +
