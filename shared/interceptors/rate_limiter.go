@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -78,13 +79,23 @@ func UnaryRateLimiter(client *redis.Client, cfg RateLimiterConfig, reporter Erro
 	}
 }
 
-// TODO: relay ip -> last x-forwarder-for -> p.Addr
+// TODO: real ip -> last x-forwarder-for -> p.Addr
 func clientIP(ctx context.Context) (string, error) {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if vals := md.Get("x-forwarded-for"); len(vals) > 0 {
+		//1. x-real-ip
+		if vals := md.Get("x-real-ip"); len(vals) > 0 && vals[0] != "" {
 			return vals[0], nil
 		}
+		//2. last x-forwarded-for
+		if vals := md.Get("x-forwarded-for"); len(vals) > 0 {
+			parts := strings.Split(vals[0], ",")
+			last := strings.TrimSpace(parts[len(parts)-1])
+			if last != "" {
+				return last, nil
+			}
+		}
 	}
+	//3. peer.Addr
 	if p, ok := peer.FromContext(ctx); ok {
 		if addr, ok := p.Addr.(*net.TCPAddr); ok {
 			return addr.IP.String(), nil

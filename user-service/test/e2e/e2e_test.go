@@ -371,3 +371,49 @@ func TestE2E_RateLimit_DifferentIPs(t *testing.T) {
 	_, err = client.Login(ctx2, &userv1.LoginRequest{Email: "x@local", Password: "wrongpass"})
 	assert.Equal(t, codes.Unauthenticated, status.Code(err)) // не ResourceExhausted
 }
+
+func TestE2E_RateLimit_RealIP(t *testing.T) {
+	client, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "x-real-ip", "10.0.0.1")
+
+	// Лимит 5 на Login
+	for i := 0; i < 5; i++ {
+		_, _ = client.Login(ctx, &userv1.LoginRequest{
+			Email:    "x@local",
+			Password: "wrongpassword",
+		})
+	}
+
+	_, err := client.Login(ctx, &userv1.LoginRequest{
+		Email:    "x@local",
+		Password: "wrongpassword",
+	})
+	require.Error(t, err)
+	assert.Equal(t, codes.ResourceExhausted, status.Code(err))
+}
+
+func TestE2E_RateLimit_ForwardedFor(t *testing.T) {
+	client, cleanup := setupTestServer(t)
+	defer cleanup()
+
+	// Клиент прислал "1.1.1.1", прокси добавил "10.0.0.2"
+	// Берём последний — 10.0.0.2
+	ctx := metadata.AppendToOutgoingContext(context.Background(),
+		"x-forwarded-for", "1.1.1.1, 10.0.0.2")
+
+	for i := 0; i < 5; i++ {
+		_, _ = client.Login(ctx, &userv1.LoginRequest{
+			Email:    "x@local",
+			Password: "wrongpassword",
+		})
+	}
+
+	_, err := client.Login(ctx, &userv1.LoginRequest{
+		Email:    "x@local",
+		Password: "wrongpassword",
+	})
+	require.Error(t, err)
+	assert.Equal(t, codes.ResourceExhausted, status.Code(err))
+}

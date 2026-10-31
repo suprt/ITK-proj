@@ -117,8 +117,8 @@ func setupTestServer(t *testing.T) (userv1.UserServiceClient, func()) {
 			},
 		),
 		fx.Provide(
-			func(lc fx.Lifecycle, logger *zap.Logger, interceptor grpc.UnaryServerInterceptor) *grpc.Server {
-				srv := grpc.NewServer(grpc.UnaryInterceptor(interceptor))
+			func(lc fx.Lifecycle, logger *zap.Logger, interceptors []grpc.UnaryServerInterceptor) *grpc.Server {
+				srv := grpc.NewServer(grpc.ChainUnaryInterceptor(interceptors...))
 				lc.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
 						go func() { _ = srv.Serve(lis) }()
