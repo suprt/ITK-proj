@@ -3,9 +3,10 @@ package dto
 import "github.com/suprt/trading/user-service/internal/core/domain"
 
 type RegisterInput struct {
-	Email    string
-	Username string
-	Password string
+	Email          string
+	Username       string
+	Password       string
+	IdempotencyKey string
 }
 
 type RegisterOutput struct {

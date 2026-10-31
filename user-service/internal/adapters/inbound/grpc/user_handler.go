@@ -7,6 +7,7 @@ import (
 	"github.com/suprt/trading/user-service/internal/core/domain"
 	"github.com/suprt/trading/user-service/internal/core/dto"
 	"github.com/suprt/trading/user-service/internal/core/ports/inbound"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -20,10 +21,18 @@ func New(userService inbound.UserService) *Handler {
 }
 
 func (h *Handler) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
+	var idemKey string
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if vals := md.Get("idempotency-key"); len(vals) > 0 {
+			idemKey = vals[0]
+		}
+	}
+
 	out, err := h.userService.Register(ctx, dto.RegisterInput{
 		Email:    req.GetEmail(),
 		Username: req.GetUsername(),
 		Password: req.GetPassword(),
+		IdempotencyKey: idemKey,
 	})
 	if err != nil {
 		return nil, mapErr(err)
@@ -134,7 +143,7 @@ func (h *Handler) GetPublicProfile(ctx context.Context, req *userv1.GetPublicPro
 		Profile: &userv1.PublicProfile{
 			Id:        string(out.UserID),
 			Username:  out.Username,
-			CreatedAt: timestamppb.New(out.CreateAt),
+			CreatedAt: timestamppb.New(out.CreatedAt),
 		},
 	}, nil
 }

@@ -3,14 +3,12 @@ package application
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/suprt/trading/user-service/internal/core/domain"
 	"github.com/suprt/trading/user-service/internal/core/dto"
 	er "github.com/suprt/trading/user-service/internal/core/errors"
 	"github.com/suprt/trading/user-service/internal/core/ports/outbound"
-	"google.golang.org/grpc/metadata"
 )
 
 type RegisterUseCase struct {
@@ -51,27 +49,18 @@ func NewRegisterUseCase(
 
 func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*dto.RegisterOutput, error) {
 
-	var idemKey string
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if vals := md.Get("idempotency-key"); len(vals) > 0 {
-			idemKey = vals[0]
-		}
-	}
-	payloadHash := sha256HEX(fmt.Sprintf("%s:%s:%s", in.Email, in.Username, in.Password))
+	//TODO: get idem key in handler. Remove payload hash
 
-	if idemKey != "" {
-		rec, err := r.idemStore.Get(ctx, idemKey)
+	if in.IdempotencyKey != "" {
+		rec, err := r.idemStore.Get(ctx, in.IdempotencyKey)
 		if err != nil {
 			r.reporter.Report(ctx, err, map[string]string{
 				"op":  "idempotency_get",
-				"key": idemKey,
+				"key": in.IdempotencyKey,
 			})
 		}
 
 		if rec != nil {
-			if rec.PayloadHash != payloadHash {
-				return nil, er.ErrIdempotencyConflict
-			}
 
 			return &dto.RegisterOutput{UserID: domain.UserID(rec.UserID)}, nil
 		}
@@ -82,14 +71,13 @@ func (r *RegisterUseCase) Register(ctx context.Context, in dto.RegisterInput) (*
 		return nil, err
 	}
 
-	if idemKey != "" {
-		if err := r.idemStore.Set(ctx, idemKey, &domain.IdempotencyRecord{
-			PayloadHash: payloadHash,
-			UserID:      string(out.UserID),
+	if in.IdempotencyKey != "" {
+		if err := r.idemStore.Set(ctx, in.IdempotencyKey, &domain.IdempotencyRecord{
+			UserID: string(out.UserID),
 		}, r.idemTTL); err != nil {
 			r.reporter.Report(ctx, err, map[string]string{
 				"op":  "idempotency_set",
-				"key": idemKey,
+				"key": in.IdempotencyKey,
 			})
 		}
 	}

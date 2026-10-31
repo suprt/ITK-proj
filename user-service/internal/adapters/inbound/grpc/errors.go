@@ -27,8 +27,6 @@ func mapErr(err error) error {
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Is(err, er.ErrInvalidRole):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, er.ErrIdempotencyConflict):
-		return status.Error(codes.FailedPrecondition, err.Error())
 	default:
 		log.Printf("unhandled error : %v", err)
 		return status.Error(codes.Internal, "internal error")
