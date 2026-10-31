@@ -1383,7 +1383,10 @@ func (x *AdminResetPasswordRequest) GetUserId() string {
 	return ""
 }
 
-// TODO: bool как прошла операция + дока
+// TODO:
+// Данная реализация является заглушкой для удобства тестирования и отладки
+// в проде здесь должен возвращаться статус операции (успех/провал), а пароль отсылаться
+// по смс/емайл пользователю.
 type AdminResetPasswordResponse struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	TemporaryPassword string                 `protobuf:"bytes,1,opt,name=temporary_password,json=temporaryPassword,proto3" json:"temporary_password,omitempty"`
@@ -1424,6 +1427,110 @@ func (*AdminResetPasswordResponse) Descriptor() ([]byte, []int) {
 func (x *AdminResetPasswordResponse) GetTemporaryPassword() string {
 	if x != nil {
 		return x.TemporaryPassword
+	}
+	return ""
+}
+
+type ListUsersRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PageSize      int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string                 `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"` //cursor: base64(created_at + "|" + id)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUsersRequest) Reset() {
+	*x = ListUsersRequest{}
+	mi := &file_user_v1_user_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUsersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUsersRequest) ProtoMessage() {}
+
+func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUsersRequest.ProtoReflect.Descriptor instead.
+func (*ListUsersRequest) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *ListUsersRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListUsersRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+type ListUsersResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Users         []*User                `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListUsersResponse) Reset() {
+	*x = ListUsersResponse{}
+	mi := &file_user_v1_user_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListUsersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListUsersResponse) ProtoMessage() {}
+
+func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_v1_user_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListUsersResponse.ProtoReflect.Descriptor instead.
+func (*ListUsersResponse) Descriptor() ([]byte, []int) {
+	return file_user_v1_user_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *ListUsersResponse) GetUsers() []*User {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
+func (x *ListUsersResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
 	}
 	return ""
 }
@@ -1512,13 +1619,20 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\x19AdminResetPasswordRequest\x12!\n" +
 	"\auser_id\x18\x01 \x01(\tB\b\xbaH\x05r\x03\xb0\x01\x01R\x06userId\"K\n" +
 	"\x1aAdminResetPasswordResponse\x12-\n" +
-	"\x12temporary_password\x18\x01 \x01(\tR\x11temporaryPassword*L\n" +
+	"\x12temporary_password\x18\x01 \x01(\tR\x11temporaryPassword\"Y\n" +
+	"\x10ListUsersRequest\x12&\n" +
+	"\tpage_size\x18\x01 \x01(\x05B\t\xbaH\x06\x1a\x04\x18d(\x01R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\"`\n" +
+	"\x11ListUsersResponse\x12#\n" +
+	"\x05users\x18\x01 \x03(\v2\r.user.v1.UserR\x05users\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*L\n" +
 	"\x04Role\x12\x14\n" +
 	"\x10ROLE_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tROLE_USER\x10\x01\x12\x0f\n" +
 	"\vROLE_TRADER\x10\x02\x12\x0e\n" +
 	"\n" +
-	"ROLE_ADMIN\x10\x032\xea\a\n" +
+	"ROLE_ADMIN\x10\x032\xae\b\n" +
 	"\vUserService\x12?\n" +
 	"\bRegister\x12\x18.user.v1.RegisterRequest\x1a\x19.user.v1.RegisterResponse\x126\n" +
 	"\x05Login\x12\x15.user.v1.LoginRequest\x1a\x16.user.v1.LoginResponse\x12K\n" +
@@ -1533,7 +1647,8 @@ const file_user_v1_user_proto_rawDesc = "" +
 	"\rUpdateProfile\x12\x1d.user.v1.UpdateProfileRequest\x1a\x1e.user.v1.UpdateProfileResponse\x12Q\n" +
 	"\x0eChangePassword\x12\x1e.user.v1.ChangePasswordRequest\x1a\x1f.user.v1.ChangePasswordResponse\x12]\n" +
 	"\x12AdminUpdateProfile\x12\".user.v1.AdminUpdateProfileRequest\x1a#.user.v1.AdminUpdateProfileResponse\x12]\n" +
-	"\x12AdminResetPassword\x12\".user.v1.AdminResetPasswordRequest\x1a#.user.v1.AdminResetPasswordResponseB\x84\x01\n" +
+	"\x12AdminResetPassword\x12\".user.v1.AdminResetPasswordRequest\x1a#.user.v1.AdminResetPasswordResponse\x12B\n" +
+	"\tListUsers\x12\x19.user.v1.ListUsersRequest\x1a\x1a.user.v1.ListUsersResponseB\x84\x01\n" +
 	"\vcom.user.v1B\tUserProtoP\x01Z-github.com/suprt/trading/proto/user/v1;userv1\xa2\x02\x03UXX\xaa\x02\aUser.V1\xca\x02\aUser\\V1\xe2\x02\x13User\\V1\\GPBMetadata\xea\x02\bUser::V1b\x06proto3"
 
 var (
@@ -1549,7 +1664,7 @@ func file_user_v1_user_proto_rawDescGZIP() []byte {
 }
 
 var file_user_v1_user_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_user_v1_user_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_user_v1_user_proto_goTypes = []any{
 	(Role)(0),                          // 0: user.v1.Role
 	(*User)(nil),                       // 1: user.v1.User
@@ -1580,49 +1695,54 @@ var file_user_v1_user_proto_goTypes = []any{
 	(*AdminUpdateProfileResponse)(nil), // 26: user.v1.AdminUpdateProfileResponse
 	(*AdminResetPasswordRequest)(nil),  // 27: user.v1.AdminResetPasswordRequest
 	(*AdminResetPasswordResponse)(nil), // 28: user.v1.AdminResetPasswordResponse
-	(*timestamppb.Timestamp)(nil),      // 29: google.protobuf.Timestamp
+	(*ListUsersRequest)(nil),           // 29: user.v1.ListUsersRequest
+	(*ListUsersResponse)(nil),          // 30: user.v1.ListUsersResponse
+	(*timestamppb.Timestamp)(nil),      // 31: google.protobuf.Timestamp
 }
 var file_user_v1_user_proto_depIdxs = []int32{
 	0,  // 0: user.v1.User.roles:type_name -> user.v1.Role
-	29, // 1: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	29, // 2: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	29, // 3: user.v1.PublicProfile.created_at:type_name -> google.protobuf.Timestamp
+	31, // 1: user.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	31, // 2: user.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	31, // 3: user.v1.PublicProfile.created_at:type_name -> google.protobuf.Timestamp
 	1,  // 4: user.v1.GetSelfProfileResponse.user:type_name -> user.v1.User
 	1,  // 5: user.v1.GetUserByIDResponse.user:type_name -> user.v1.User
 	0,  // 6: user.v1.AddRoleRequest.role:type_name -> user.v1.Role
 	0,  // 7: user.v1.RemoveRoleRequest.role:type_name -> user.v1.Role
 	2,  // 8: user.v1.GetPublicProfileResponse.profile:type_name -> user.v1.PublicProfile
-	3,  // 9: user.v1.UserService.Register:input_type -> user.v1.RegisterRequest
-	5,  // 10: user.v1.UserService.Login:input_type -> user.v1.LoginRequest
-	7,  // 11: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
-	9,  // 12: user.v1.UserService.GetSelfProfile:input_type -> user.v1.GetSelfProfileRequest
-	11, // 13: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
-	13, // 14: user.v1.UserService.Logout:input_type -> user.v1.LogoutRequest
-	15, // 15: user.v1.UserService.AddRole:input_type -> user.v1.AddRoleRequest
-	17, // 16: user.v1.UserService.RemoveRole:input_type -> user.v1.RemoveRoleRequest
-	19, // 17: user.v1.UserService.GetPublicProfile:input_type -> user.v1.GetPublicProfileRequest
-	21, // 18: user.v1.UserService.UpdateProfile:input_type -> user.v1.UpdateProfileRequest
-	23, // 19: user.v1.UserService.ChangePassword:input_type -> user.v1.ChangePasswordRequest
-	25, // 20: user.v1.UserService.AdminUpdateProfile:input_type -> user.v1.AdminUpdateProfileRequest
-	27, // 21: user.v1.UserService.AdminResetPassword:input_type -> user.v1.AdminResetPasswordRequest
-	4,  // 22: user.v1.UserService.Register:output_type -> user.v1.RegisterResponse
-	6,  // 23: user.v1.UserService.Login:output_type -> user.v1.LoginResponse
-	8,  // 24: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
-	10, // 25: user.v1.UserService.GetSelfProfile:output_type -> user.v1.GetSelfProfileResponse
-	12, // 26: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
-	14, // 27: user.v1.UserService.Logout:output_type -> user.v1.LogoutResponse
-	16, // 28: user.v1.UserService.AddRole:output_type -> user.v1.AddRoleResponse
-	18, // 29: user.v1.UserService.RemoveRole:output_type -> user.v1.RemoveRoleResponse
-	20, // 30: user.v1.UserService.GetPublicProfile:output_type -> user.v1.GetPublicProfileResponse
-	22, // 31: user.v1.UserService.UpdateProfile:output_type -> user.v1.UpdateProfileResponse
-	24, // 32: user.v1.UserService.ChangePassword:output_type -> user.v1.ChangePasswordResponse
-	26, // 33: user.v1.UserService.AdminUpdateProfile:output_type -> user.v1.AdminUpdateProfileResponse
-	28, // 34: user.v1.UserService.AdminResetPassword:output_type -> user.v1.AdminResetPasswordResponse
-	22, // [22:35] is the sub-list for method output_type
-	9,  // [9:22] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	1,  // 9: user.v1.ListUsersResponse.users:type_name -> user.v1.User
+	3,  // 10: user.v1.UserService.Register:input_type -> user.v1.RegisterRequest
+	5,  // 11: user.v1.UserService.Login:input_type -> user.v1.LoginRequest
+	7,  // 12: user.v1.UserService.RefreshToken:input_type -> user.v1.RefreshTokenRequest
+	9,  // 13: user.v1.UserService.GetSelfProfile:input_type -> user.v1.GetSelfProfileRequest
+	11, // 14: user.v1.UserService.GetUserByID:input_type -> user.v1.GetUserByIDRequest
+	13, // 15: user.v1.UserService.Logout:input_type -> user.v1.LogoutRequest
+	15, // 16: user.v1.UserService.AddRole:input_type -> user.v1.AddRoleRequest
+	17, // 17: user.v1.UserService.RemoveRole:input_type -> user.v1.RemoveRoleRequest
+	19, // 18: user.v1.UserService.GetPublicProfile:input_type -> user.v1.GetPublicProfileRequest
+	21, // 19: user.v1.UserService.UpdateProfile:input_type -> user.v1.UpdateProfileRequest
+	23, // 20: user.v1.UserService.ChangePassword:input_type -> user.v1.ChangePasswordRequest
+	25, // 21: user.v1.UserService.AdminUpdateProfile:input_type -> user.v1.AdminUpdateProfileRequest
+	27, // 22: user.v1.UserService.AdminResetPassword:input_type -> user.v1.AdminResetPasswordRequest
+	29, // 23: user.v1.UserService.ListUsers:input_type -> user.v1.ListUsersRequest
+	4,  // 24: user.v1.UserService.Register:output_type -> user.v1.RegisterResponse
+	6,  // 25: user.v1.UserService.Login:output_type -> user.v1.LoginResponse
+	8,  // 26: user.v1.UserService.RefreshToken:output_type -> user.v1.RefreshTokenResponse
+	10, // 27: user.v1.UserService.GetSelfProfile:output_type -> user.v1.GetSelfProfileResponse
+	12, // 28: user.v1.UserService.GetUserByID:output_type -> user.v1.GetUserByIDResponse
+	14, // 29: user.v1.UserService.Logout:output_type -> user.v1.LogoutResponse
+	16, // 30: user.v1.UserService.AddRole:output_type -> user.v1.AddRoleResponse
+	18, // 31: user.v1.UserService.RemoveRole:output_type -> user.v1.RemoveRoleResponse
+	20, // 32: user.v1.UserService.GetPublicProfile:output_type -> user.v1.GetPublicProfileResponse
+	22, // 33: user.v1.UserService.UpdateProfile:output_type -> user.v1.UpdateProfileResponse
+	24, // 34: user.v1.UserService.ChangePassword:output_type -> user.v1.ChangePasswordResponse
+	26, // 35: user.v1.UserService.AdminUpdateProfile:output_type -> user.v1.AdminUpdateProfileResponse
+	28, // 36: user.v1.UserService.AdminResetPassword:output_type -> user.v1.AdminResetPasswordResponse
+	30, // 37: user.v1.UserService.ListUsers:output_type -> user.v1.ListUsersResponse
+	24, // [24:38] is the sub-list for method output_type
+	10, // [10:24] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_user_v1_user_proto_init() }
@@ -1638,7 +1758,7 @@ func file_user_v1_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_v1_user_proto_rawDesc), len(file_user_v1_user_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   28,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -203,3 +203,23 @@ func (h *Handler) AdminResetPassword(ctx context.Context,
 	}, nil
 
 }
+
+func (h *Handler) ListUsers(ctx context.Context, req *userv1.ListUsersRequest) (*userv1.ListUsersResponse, error) {
+	out, err := h.userService.ListUsers(ctx, dto.ListUsersInput{
+		PageSize: req.GetPageSize(),
+		PageToken: req.GetPageToken(),
+	})
+	if err != nil {
+		return nil, mapErr(err)
+	}
+
+	users := make([]*userv1.User, len(out.Users))
+	for i, user := range out.Users {
+		users[i] = userToProto(user)
+	}
+
+	return &userv1.ListUsersResponse{
+		Users: users,
+		NextPageToken: out.NextPageToken,
+	}, nil
+}

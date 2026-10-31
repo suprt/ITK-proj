@@ -221,6 +221,7 @@ func Module(cfg userconfig.Config) fx.Option {
 			application.NewChangePasswordUseCase,
 			application.NewAdminUpdateProfileUseCase,
 			application.NewAdminResetPasswordUseCase,
+			application.NewListUsersUseCase,
 			application.NewService,
 		),
 
@@ -252,7 +253,6 @@ func Start() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	zapLogger, err := logger.New(logger.Config{
 		Level:  cfg.Log.Level,
 		Format: cfg.Log.Format,

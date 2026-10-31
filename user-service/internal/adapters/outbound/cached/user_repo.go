@@ -3,6 +3,7 @@ package cached
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/suprt/trading/user-service/internal/core/domain"
 	er "github.com/suprt/trading/user-service/internal/core/errors"
@@ -82,4 +83,9 @@ func (r *UserRepo) GetByID(ctx context.Context, id domain.UserID) (*domain.User,
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	return r.next.GetByEmail(ctx, email) //не кэшируем по email - операция редкая, кэширование может создать проблемы при логине
+}
+
+func (r *UserRepo) List(ctx context.Context, limit int, afterCreatedAt time.Time, afterID domain.UserID) ([]*domain.User, error) {
+	// Не кэшируем - пагинация и фильтры делают кэш бесполезным + инвалидация всего списка при любом изменении
+	return r.next.List(ctx, limit, afterCreatedAt, afterID)
 }

@@ -17,4 +17,5 @@ var (
 	ErrInvalidRole        = errors.New("invalid role")
 	ErrUsernameTaken      = errors.New("username already taken")
 	ErrCacheMiss          = errors.New("cache miss")
+	ErrInvalidPageToken   = errors.New("invalid page token")
 )

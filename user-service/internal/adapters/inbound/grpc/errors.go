@@ -14,7 +14,8 @@ func mapErr(err error) error {
 	case errors.Is(err, er.ErrEmailTaken),
 		errors.Is(err, er.ErrUsernameTaken):
 		return status.Error(codes.AlreadyExists, err.Error())
-	case errors.Is(err, er.ErrWeakPassword):
+	case errors.Is(err, er.ErrWeakPassword),
+		errors.Is(err, er.ErrInvalidPageToken):
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, er.ErrUserNotFound):
 		return status.Error(codes.NotFound, err.Error())

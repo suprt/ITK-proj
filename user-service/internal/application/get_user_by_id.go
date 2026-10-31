@@ -13,11 +13,10 @@ import (
 
 type GetUserByIDUseCase struct {
 	users outbound.UserRepository
-	uow   outbound.UnitOfWork
 }
 
 func NewGetUserByIDUseCase(users outbound.UserRepository, uow outbound.UnitOfWork) *GetUserByIDUseCase {
-	return &GetUserByIDUseCase{users: users, uow: uow}
+	return &GetUserByIDUseCase{users: users}
 }
 
 func (uc *GetUserByIDUseCase) GetUserByID(ctx context.Context, in dto.GetUserByIDInput) (*dto.GetUserByIDOutput, error) {
@@ -26,27 +25,21 @@ func (uc *GetUserByIDUseCase) GetUserByID(ctx context.Context, in dto.GetUserByI
 		return nil, er.ErrUnauthenticated
 	}
 	var target *domain.User
-	err := uc.uow.Do(ctx, func(ctx context.Context) error {
-		caller, err := uc.users.GetByID(ctx, callerID)
-		if err != nil {
-			if errors.Is(err, er.ErrUserNotFound) {
-				return er.ErrUnauthenticated
-			}
-			return err
-		}
-		if !caller.HasRole(domain.RoleAdmin) {
-			return er.ErrForbidden
-		}
-
-		target, err = uc.users.GetByID(ctx, in.UserID)
-		if err != nil {
-			return err // NotFound - можем сообщить админу, что юзера нет
-		}
-		return nil
-	})
-
+	caller, err := uc.users.GetByID(ctx, callerID)
 	if err != nil {
+		if errors.Is(err, er.ErrUserNotFound) {
+			return nil, er.ErrUnauthenticated
+		}
 		return nil, err
 	}
+	if !caller.HasRole(domain.RoleAdmin) {
+		return nil, er.ErrForbidden
+	}
+
+	target, err = uc.users.GetByID(ctx, in.UserID)
+	if err != nil {
+		return nil, err // NotFound - можем сообщить админу, что юзера нет
+	}
+
 	return &dto.GetUserByIDOutput{User: target}, nil
 }
