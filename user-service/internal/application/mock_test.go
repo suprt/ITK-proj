@@ -37,9 +37,17 @@ func (m *mockUserRepo) Create(_ context.Context, u *domain.User) error {
 }
 
 func (m *mockUserRepo) UpdateProfile(_ context.Context, u *domain.User) error {
+	// 1. Проверяем, что юзер существует
 	if _, exists := m.users[u.ID]; !exists {
 		return er.ErrUserNotFound
 	}
+
+	// 2. Проверяем, что новый email не занят другим юзером
+	if existingID, taken := m.emails[u.Email]; taken && existingID != u.ID {
+		return er.ErrEmailTaken
+	}
+
+	// 3. Обновляем
 	m.users[u.ID] = u
 	m.emails[u.Email] = u.ID
 	return nil
@@ -91,6 +99,16 @@ func (m *mockCredentialsRepo) GetByID(_ context.Context, userID domain.UserID) (
 		return nil, er.ErrUserNotFound
 	}
 	return c, nil
+}
+
+func (m *mockUserRepo) List(ctx context.Context, limit int, afterCreatedAt time.Time, afterID domain.UserID) ([]*domain.User, error) {
+	// Простейшая реализация для тестов
+	var result []*domain.User
+	for _, u := range m.users {
+		// фильтрация по курсору (для тестов можно игнорировать или реализовать)
+		result = append(result, u)
+	}
+	return result, nil
 }
 
 // --- SessionRepository ---
@@ -205,3 +223,17 @@ func (m *mockUoW) Do(ctx context.Context, fn func(ctx context.Context) error) er
 func mustTime(d time.Duration) time.Time {
 	return time.Now().Add(d)
 }
+
+type mockIdempotencyStore struct{}
+
+func (m *mockIdempotencyStore) Get(ctx context.Context, key string) (*domain.IdempotencyRecord, error) {
+	return nil, nil // всегда "не найдено"
+}
+
+func (m *mockIdempotencyStore) Set(ctx context.Context, key string, rec *domain.IdempotencyRecord, ttl time.Duration) error {
+	return nil
+}
+
+type mockErrorReporter struct{}
+
+func (m *mockErrorReporter) Report(ctx context.Context, err error, attrs map[string]string) {}

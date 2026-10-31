@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/suprt/trading/user-service/internal/application"
 	"github.com/suprt/trading/user-service/internal/core/domain"
@@ -17,8 +18,13 @@ func TestRegister_Success(t *testing.T) {
 	hasher := &mockHasher{hash: "hashed"}
 	ids := &mockIDGen{id: "user-1"}
 	uow := &mockUoW{}
+	idemStore := &mockIdempotencyStore{}
+	reporter := &mockErrorReporter{}
 
-	uc := application.NewRegisterUseCase(users, creds, hasher, ids, uow)
+	uc := application.NewRegisterUseCase(
+		users, creds, hasher, ids, uow, idemStore, reporter,
+		application.RegisterConfig{IdempotencyTTL: time.Hour},
+	)
 
 	out, err := uc.Register(context.Background(), dto.RegisterInput{
 		Email:    "test@local",
@@ -54,7 +60,8 @@ func TestRegister_EmailTaken(t *testing.T) {
 		Username: "existing_user",
 	})
 
-	uc := application.NewRegisterUseCase(users, newMockCredentialsRepo(), &mockHasher{}, &mockIDGen{id: "new"}, &mockUoW{})
+	uc := application.NewRegisterUseCase(users, newMockCredentialsRepo(), &mockHasher{}, &mockIDGen{id: "new"}, &mockUoW{}, &mockIdempotencyStore{},
+	&mockErrorReporter{}, application.RegisterConfig{IdempotencyTTL: time.Hour}, )
 
 	_, err := uc.Register(context.Background(), dto.RegisterInput{
 		Email:    "taken@local",
@@ -74,7 +81,8 @@ func TestRegister_UsernameTaken(t *testing.T) {
 		Username: "taken_user",
 	})
 
-	uc := application.NewRegisterUseCase(users, newMockCredentialsRepo(), &mockHasher{}, &mockIDGen{id: "new"}, &mockUoW{})
+	uc := application.NewRegisterUseCase(users, newMockCredentialsRepo(), &mockHasher{}, &mockIDGen{id: "new"}, &mockUoW{}, &mockIdempotencyStore{},
+		&mockErrorReporter{}, application.RegisterConfig{IdempotencyTTL: time.Hour}, )
 
 	_, err := uc.Register(context.Background(), dto.RegisterInput{
 		Email:    "new@local",

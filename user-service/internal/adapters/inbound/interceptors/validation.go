@@ -18,7 +18,7 @@ func UnaryValidation() grpc.UnaryServerInterceptor {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid request type")
 		}
 		if err := protovalidate.Validate(msg); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, err.Error())
+			return nil, status.Errorf(codes.InvalidArgument, "%s", err.Error())
 		}
 		return handler(ctx, req)
 	}
