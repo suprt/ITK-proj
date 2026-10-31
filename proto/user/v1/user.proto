@@ -177,7 +177,10 @@ message AdminResetPasswordRequest{
   string user_id = 1 [(buf.validate.field).string.uuid = true];
 }
 
-//TODO: bool как прошла операция + дока
+// TODO:
+// Данная реализация является заглушкой для удобства тестирования и отладки
+// в проде здесь должен возвращаться статус операции (успех/провал), а пароль отсылаться
+// по смс/емайл пользователю.
 message AdminResetPasswordResponse {
   string temporary_password = 1;
 }
